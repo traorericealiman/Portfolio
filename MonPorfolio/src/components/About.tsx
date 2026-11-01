@@ -3,7 +3,6 @@ import { useRef } from 'react';
 import { Check, Mail, Phone, Github, Linkedin, Facebook, ImageOff } from 'lucide-react';
 import { useContent } from '../lib/contentStore';
 import { recordSocialClick } from '../lib/analytics';
-import AiLineArt from './ai/AiLineArt';
 
 interface Logo {
   src: string;
@@ -69,11 +68,6 @@ export default function About() {
       id="about"
       className="relative overflow-hidden bg-white py-16 text-zinc-900 sm:py-20 md:py-24 lg:py-28"
     >
-      <AiLineArt
-        variant="profile"
-        tone="light"
-        className="absolute -left-10 bottom-[-20px] w-[220px] opacity-90 sm:w-[340px] lg:w-[400px]"
-      />
       <div className="relative z-10 mx-auto max-w-6xl px-6 lg:px-10">
         {/* ── Présentation : texte à gauche, photo à droite, alignés ── */}
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
@@ -89,7 +83,7 @@ export default function About() {
               <span className="h-px w-16 bg-zinc-300" />
             </motion.p>
 
-            <motion.h2
+            <motion.h2 data-thread
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

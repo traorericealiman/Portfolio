@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { ArrowUp, ArrowUpRight } from 'lucide-react';
 import { useContent } from '../lib/contentStore';
 import { recordSocialClick, type SocialPlatform } from '../lib/analytics';
-import AiLineArt from './ai/AiLineArt';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -17,11 +16,6 @@ export default function Footer() {
 
   return (
     <footer id="contact" className="relative overflow-hidden bg-zinc-950 px-6 pb-8 pt-20 text-white sm:px-10 sm:pt-28 lg:px-16">
-      <AiLineArt
-        variant="brain"
-        tone="dark"
-        className="absolute -right-12 top-8 w-[240px] opacity-80 sm:w-[380px] lg:w-[460px]"
-      />
       <div className="relative mx-auto max-w-6xl">
         <div className="grid gap-16 md:grid-cols-2 md:gap-24">
           {/* Contact */}
@@ -31,7 +25,7 @@ export default function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease }}
           >
-            <h3 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">Contact</h3>
+            <h3 data-thread className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">Contact</h3>
             <p className="mb-10 max-w-md text-lg font-light leading-relaxed text-zinc-400">
               Pour un stage, une mission ou une collaboration, vous pouvez m’écrire ou m’appeler directement.
             </p>

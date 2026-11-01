@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useContent } from '../lib/contentStore';
-import AiLineArt from './ai/AiLineArt';
 
 export default function VisualCreations() {
   const { creations } = useContent();
@@ -14,11 +13,6 @@ export default function VisualCreations() {
 
   return (
     <section id="creations" className="relative scroll-mt-12 py-16 sm:py-20 md:py-24 bg-zinc-950 flex flex-col items-center justify-center overflow-hidden">
-      <AiLineArt
-        variant="robot"
-        tone="dark"
-        className="absolute -right-6 bottom-4 w-[170px] opacity-80 sm:w-[260px] lg:w-[320px]"
-      />
       {/* Background Decor */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 opacity-10" style={{
@@ -38,7 +32,7 @@ export default function VisualCreations() {
               className="flex items-center gap-3 text-blue-400 font-mono justify-center lg:justify-start"
             >
             </motion.div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tighter">
+            <h2 data-thread className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tighter">
               CRÉATIONS <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-500">
                 VISUELLES

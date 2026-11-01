@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCompetitionDate, sortCompetitionsByDate, useContent } from '../lib/contentStore';
-import AiLineArt from './ai/AiLineArt';
 
 export default function Competitions() {
   const content = useContent();
@@ -27,11 +26,6 @@ export default function Competitions() {
 
   return (
     <section className="relative py-16 sm:py-20 md:py-24 bg-zinc-50 text-zinc-900 overflow-hidden">
-      <AiLineArt
-        variant="circuit"
-        tone="light"
-        className="absolute -right-6 top-4 w-[300px] sm:w-[440px] lg:w-[520px]"
-      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -40,7 +34,7 @@ export default function Competitions() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-14"
         >
           <div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tighter">
+            <h2 data-thread className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tighter">
               Compétitions <span className="font-bold">& Hackathons</span>
             </h2>
           </div>

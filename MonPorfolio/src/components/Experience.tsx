@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import AiLineArt from './ai/AiLineArt';
 
 interface Exp {
   role: string;
@@ -246,14 +245,9 @@ export default function Experience() {
   };
 
   return (
-    <section id="experience" className="relative isolate scroll-mt-12 overflow-hidden border-t border-zinc-200 bg-zinc-100 py-20 sm:py-28">
-      <AiLineArt
-        variant="network"
-        tone="light"
-        className="absolute -right-8 top-6 -z-10 w-[200px] sm:w-[300px] lg:w-[360px]"
-      />
+    <section id="experience" className="relative scroll-mt-12 overflow-hidden border-t border-zinc-200 bg-zinc-100 py-20 sm:py-28">
       <div className="mx-auto mb-6 flex max-w-6xl flex-col items-start justify-between gap-6 px-6 sm:mb-10 md:flex-row md:items-end lg:px-10">
-        <motion.h2
+        <motion.h2 data-thread
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
