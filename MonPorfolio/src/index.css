@@ -94,52 +94,25 @@
 }
 
 
-/* Filigranes IA (AiLineArt) : couleurs par type de fond, impulsions et nœuds */
-.ai-art {
-  --ai-line: rgba(96, 165, 250, 0.38);
-  --ai-node: rgba(165, 243, 252, 0.8);
-  --ai-node-fill: rgba(56, 189, 248, 0.25);
-  --ai-pulse: #67e8f9;
-}
-.ai-art[data-tone='light'] {
-  --ai-line: rgba(37, 99, 235, 0.26);
-  --ai-node: rgba(37, 99, 235, 0.55);
-  --ai-node-fill: rgba(37, 99, 235, 0.12);
-  --ai-pulse: #2563eb;
-}
-.ai-art[data-tone='current'] {
-  --ai-line: color-mix(in srgb, currentColor 22%, transparent);
-  --ai-node: color-mix(in srgb, currentColor 45%, transparent);
-  --ai-node-fill: transparent;
-  --ai-pulse: color-mix(in srgb, currentColor 80%, transparent);
-}
-.ai-art svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-.ai-pulse {
+/* Fibres lumineuses de la porte d'intro */
+.door-pulse {
   stroke-dasharray: 7 93;
   stroke-dashoffset: 100;
-  animation: ai-pulse 5s linear infinite;
+  animation: door-pulse 4s linear infinite;
 }
-.ai-art[data-tone='dark'] .ai-pulse {
-  filter: drop-shadow(0 0 3px rgba(103, 232, 249, 0.9));
+.door-node {
+  animation: door-node 3s ease-in-out infinite;
 }
-.ai-node {
-  animation: ai-node 3s ease-in-out infinite;
-}
-@keyframes ai-pulse {
+@keyframes door-pulse {
   to {
     stroke-dashoffset: 0;
   }
 }
-@keyframes ai-node {
+@keyframes door-node {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ai-pulse { display: none; }
-  .ai-node { animation: none; }
+  .door-pulse { display: none; }
+  .door-node { animation: none; }
 }

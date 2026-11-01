@@ -15,8 +15,8 @@ export default function Footer() {
   ].filter(Boolean) as { name: string; platform: SocialPlatform; link: string }[];
 
   return (
-    <footer id="contact" className="relative overflow-hidden bg-zinc-950 px-6 pb-8 pt-20 text-white sm:px-10 sm:pt-28 lg:px-16">
-      <div className="relative mx-auto max-w-6xl">
+    <footer id="contact" className="relative bg-zinc-950 px-6 pb-8 pt-20 text-white sm:px-10 sm:pt-28 lg:px-16">
+      <div className="mx-auto max-w-6xl">
         <div className="grid gap-16 md:grid-cols-2 md:gap-24">
           {/* Contact */}
           <motion.div
@@ -25,7 +25,7 @@ export default function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease }}
           >
-            <h3 data-thread className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">Contact</h3>
+            <h3 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">Contact</h3>
             <p className="mb-10 max-w-md text-lg font-light leading-relaxed text-zinc-400">
               Pour un stage, une mission ou une collaboration, vous pouvez m’écrire ou m’appeler directement.
             </p>

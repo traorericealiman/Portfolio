@@ -49,7 +49,7 @@ export default function Projects() {
           className="flex flex-col gap-8 border-b pb-8 md:flex-row md:items-end md:justify-between"
           style={{ borderColor: hair }}
         >
-          <motion.h2 data-thread
+          <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}

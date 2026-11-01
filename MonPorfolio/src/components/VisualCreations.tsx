@@ -32,7 +32,7 @@ export default function VisualCreations() {
               className="flex items-center gap-3 text-blue-400 font-mono justify-center lg:justify-start"
             >
             </motion.div>
-            <h2 data-thread className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tighter">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tighter">
               CRÉATIONS <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-500">
                 VISUELLES

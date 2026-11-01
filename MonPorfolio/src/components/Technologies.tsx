@@ -73,8 +73,8 @@ export default function Technologies() {
   }, [active, paused]);
 
   return (
-    <section id="technologies" className="relative w-full overflow-hidden bg-white py-24 sm:py-32">
-      <div className="relative mx-auto max-w-6xl px-6 lg:px-12">
+    <section id="technologies" className="w-full bg-white py-24 sm:py-32">
+      <div className="mx-auto max-w-6xl px-6 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -82,11 +82,11 @@ export default function Technologies() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="mb-12 flex flex-col items-start justify-between gap-6 md:mb-16 md:flex-row md:items-end"
         >
-          <h2 data-thread className="text-5xl font-black leading-none tracking-tighter text-zinc-900 md:text-7xl">
+          <h2 className="text-5xl font-black leading-none tracking-tighter text-zinc-900 md:text-7xl">
             TECH <span className="text-zinc-200">STACK.</span>
           </h2>
           <p className="max-w-[320px] text-base font-light leading-relaxed text-zinc-500">
-            Les technologies que j'utilise pour concevoir des solutions intelligentes, du modèle à l'interface.
+            Les technologies que j'utilise pour concevoir, développer et déployer.
           </p>
         </motion.div>
 

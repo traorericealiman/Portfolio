@@ -34,7 +34,7 @@ export default function Competitions() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-14"
         >
           <div>
-            <h2 data-thread className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tighter">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tighter">
               Compétitions <span className="font-bold">& Hackathons</span>
             </h2>
           </div>

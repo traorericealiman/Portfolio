@@ -11,7 +11,6 @@ import Footer from './components/Footer';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { motion } from 'framer-motion';
 import DoorIntro from './components/DoorIntro';
-import NeuralThread from './components/NeuralThread';
 import { recordVisit } from './lib/analytics';
 
 function App() {
@@ -30,8 +29,7 @@ function App() {
   }, []);
 
   return (
-    <div className="relative min-h-screen">
-      <NeuralThread />
+    <div className="min-h-screen">
       {!introDone && (
         <DoorIntro onReveal={() => {
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });

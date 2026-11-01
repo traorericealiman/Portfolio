@@ -83,16 +83,16 @@ export default function About() {
               <span className="h-px w-16 bg-zinc-300" />
             </motion.p>
 
-            <motion.h2 data-thread
+            <motion.h2
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="mb-8 text-4xl font-light leading-[1.05] tracking-tighter sm:text-5xl md:text-6xl"
             >
-              Rendre l'<span className="font-serif italic">intelligence</span>
+              Fusionner le <span className="font-serif italic">design</span>
               <br />
-              <span className="font-bold">artificielle</span> utile.
+              et la <span className="font-bold">performance</span>.
             </motion.h2>
 
             <motion.p
