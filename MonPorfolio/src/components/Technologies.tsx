@@ -77,7 +77,8 @@ export default function Technologies() {
     <section id="technologies" className="relative w-full overflow-hidden bg-white py-24 sm:py-32">
       <AiLineArt
         variant="brain"
-        className="absolute -right-16 top-10 w-[300px] text-zinc-900/[0.08] sm:w-[380px]"
+        tone="light"
+        className="absolute -right-10 bottom-4 w-[220px] sm:w-[320px] lg:w-[380px]"
       />
       <div className="relative mx-auto max-w-6xl px-6 lg:px-12">
         <motion.div

@@ -29,7 +29,8 @@ export default function Competitions() {
     <section className="relative py-16 sm:py-20 md:py-24 bg-zinc-50 text-zinc-900 overflow-hidden">
       <AiLineArt
         variant="circuit"
-        className="absolute -left-10 top-6 w-[340px] text-blue-600/[0.10] sm:w-[440px]"
+        tone="light"
+        className="absolute -right-6 top-4 w-[300px] sm:w-[440px] lg:w-[520px]"
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div

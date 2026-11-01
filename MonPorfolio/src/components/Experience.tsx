@@ -249,7 +249,8 @@ export default function Experience() {
     <section id="experience" className="relative isolate scroll-mt-12 overflow-hidden border-t border-zinc-200 bg-zinc-100 py-20 sm:py-28">
       <AiLineArt
         variant="network"
-        className="absolute -right-10 top-8 -z-10 hidden w-[320px] text-zinc-900/[0.08] md:block"
+        tone="light"
+        className="absolute -right-8 top-6 -z-10 w-[200px] sm:w-[300px] lg:w-[360px]"
       />
       <div className="mx-auto mb-6 flex max-w-6xl flex-col items-start justify-between gap-6 px-6 sm:mb-10 md:flex-row md:items-end lg:px-10">
         <motion.h2

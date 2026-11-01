@@ -19,7 +19,8 @@ export default function Footer() {
     <footer id="contact" className="relative overflow-hidden bg-zinc-950 px-6 pb-8 pt-20 text-white sm:px-10 sm:pt-28 lg:px-16">
       <AiLineArt
         variant="brain"
-        className="absolute -right-20 top-10 w-[320px] text-blue-400/[0.08] sm:w-[420px]"
+        tone="dark"
+        className="absolute -right-12 top-8 w-[240px] opacity-80 sm:w-[380px] lg:w-[460px]"
       />
       <div className="relative mx-auto max-w-6xl">
         <div className="grid gap-16 md:grid-cols-2 md:gap-24">

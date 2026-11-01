@@ -7,8 +7,12 @@
 
 export type AiVariant = 'brain' | 'robot' | 'network' | 'profile' | 'circuit';
 
+/** Fond sur lequel le dessin est posé : règle les couleurs pour qu'il reste bien visible. */
+export type AiTone = 'dark' | 'light' | 'current';
+
 interface Props {
   variant: AiVariant;
+  tone?: AiTone;
   className?: string;
   /** Impulsions lumineuses le long des fils (désactivées dans la miniature de l'intro). */
   animated?: boolean;
@@ -16,8 +20,8 @@ interface Props {
 
 const stroke = {
   fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.2,
+  style: { stroke: 'var(--ai-line)' },
+  strokeWidth: 1.4,
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
   vectorEffect: 'non-scaling-stroke' as const,
@@ -25,7 +29,16 @@ const stroke = {
 
 /** Nœud : petit cercle, avec un battement décalé. */
 function Node({ x, y, r = 2.6, i = 0 }: { x: number; y: number; r?: number; i?: number }) {
-  return <circle cx={x} cy={y} r={r} className="ai-node" style={{ animationDelay: `${(i * 0.37) % 3}s` }} {...stroke} />;
+  return (
+    <circle
+      cx={x}
+      cy={y}
+      r={r}
+      className="ai-node"
+      {...stroke}
+      style={{ stroke: 'var(--ai-node)', fill: 'var(--ai-node-fill)', animationDelay: `${(i * 0.37) % 3}s` }}
+    />
+  );
 }
 
 /** Fil : trait fixe + impulsion qui le parcourt. */
@@ -38,9 +51,9 @@ function Wire({ d, i = 0, animated }: { d: string; i?: number; animated: boolean
           d={d}
           pathLength={100}
           className="ai-pulse"
-          style={{ animationDelay: `${(i * 0.9) % 6}s` }}
           {...stroke}
-          strokeWidth={2}
+          style={{ stroke: 'var(--ai-pulse)', animationDelay: `${(i * 0.9) % 6}s` }}
+          strokeWidth={2.6}
         />
       )}
     </>
@@ -170,10 +183,10 @@ function Circuit({ animated }: { animated: boolean }) {
 
 const ART = { brain: Brain, robot: Robot, network: Network, profile: Profile, circuit: Circuit };
 
-export default function AiLineArt({ variant, className = '', animated = true }: Props) {
+export default function AiLineArt({ variant, tone = 'dark', className = '', animated = true }: Props) {
   const Art = ART[variant];
   return (
-    <div aria-hidden className={`ai-art pointer-events-none select-none ${className}`}>
+    <div aria-hidden data-tone={tone} className={`ai-art pointer-events-none select-none ${className}`}>
       <Art animated={animated} />
     </div>
   );

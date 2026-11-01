@@ -16,7 +16,8 @@ export default function VisualCreations() {
     <section id="creations" className="relative scroll-mt-12 py-16 sm:py-20 md:py-24 bg-zinc-950 flex flex-col items-center justify-center overflow-hidden">
       <AiLineArt
         variant="robot"
-        className="absolute -right-8 bottom-6 hidden w-[260px] text-blue-400/[0.09] md:block"
+        tone="dark"
+        className="absolute -right-6 bottom-4 w-[170px] opacity-80 sm:w-[260px] lg:w-[320px]"
       />
       {/* Background Decor */}
       <div className="absolute inset-0 z-0">

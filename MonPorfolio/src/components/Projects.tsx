@@ -45,7 +45,7 @@ export default function Projects() {
       style={{ background: current.bg, color: fg, transition: 'background 0.6s ease, color 0.6s ease' }}
     >
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <AiLineArt variant="network" className="absolute right-6 top-6 hidden w-[240px] opacity-[0.07] md:block" />
+        <AiLineArt variant="network" tone="current" className="absolute -right-4 top-4 w-[180px] sm:w-[260px] lg:w-[300px]" />
       </div>
       {/* En-tête : titre à gauche, sélecteur de projet à droite */}
       <div className="mx-auto max-w-[1400px] px-6 pt-16 sm:px-10 md:px-16 md:pt-24">

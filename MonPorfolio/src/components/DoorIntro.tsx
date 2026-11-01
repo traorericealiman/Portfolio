@@ -15,29 +15,53 @@ type Phase = 'idle' | 'opening';
 
 const NAME = 'Traoré Rice-Aliman';
 const PROMPT = 'Cliquez sur la porte pour entrer dans mon univers IA';
-const WORDS = [
-  { t: 'Intelligence Artificielle', x: 12, y: 18 },
-  { t: 'Deep Learning', x: 14, y: 52 },
-  { t: 'Machine Learning', x: 82, y: 16 },
-  { t: 'NLP', x: 86, y: 48 },
-  { t: 'Réseaux de neurones', x: 13, y: 82 },
-  { t: 'Data', x: 84, y: 80 },
-  { t: 'LLM', x: 24, y: 32 },
-  { t: 'Vision', x: 72, y: 66 },
+// Mots ancrés à un bord (left/right) : ils restent entiers quelle que soit la largeur.
+// Bandeau du haut visible partout ; ceux des côtés seulement sur grand écran (sur mobile la porte les cacherait).
+type Word = { t: string; side: 'left' | 'right'; y: number; desktopOnly?: boolean };
+const WORDS: Word[] = [
+  { t: 'Intelligence Artificielle', side: 'left', y: 6 },
+  { t: 'Machine Learning', side: 'right', y: 6 },
+  { t: 'Deep Learning', side: 'left', y: 12 },
+  { t: 'NLP', side: 'right', y: 12 },
+  { t: 'LLM', side: 'left', y: 42, desktopOnly: true },
+  { t: 'Data', side: 'left', y: 66, desktopOnly: true },
+  { t: 'Vision', side: 'right', y: 42, desktopOnly: true },
+  { t: 'Python', side: 'right', y: 66, desktopOnly: true },
 ];
 
 // Pistes de circuit gravées sur le battant (repère 100 × 160, la poignée est vers x = 88, y = 80).
+// Fibres gravées sur le battant (repère 100 × 160, la poignée est vers x = 88, y = 80).
 const DOOR_TRACES = [
-  'M86 80 H66 L58 72 H34 L26 64 V40',
-  'M86 80 H70 L62 88 H40 L30 98 V124',
-  'M66 80 V58 L58 50 V30',
-  'M58 72 V60 H44',
-  'M62 88 V112 L54 120 H38',
-  'M34 72 V84 H20',
-  'M40 88 V100',
-];
+  'M86 80 H66 L58 72 H34 L26 64 V40 L18 32 V16',
+  'M86 80 H70 L62 88 H40 L30 98 V124 L22 132 V150',
+  'M66 80 V58 L58 50 V30 L50 22 H40',
+  'M58 72 V60 H44 L38 54 V44',
+  'M62 88 V112 L54 120 H38 L30 128 V146',
+  'M34 72 V84 H20 L12 92 V112',
+  'M40 88 V100 H50 L56 106 V140 L62 146',
+  'M88 74 V50 L80 42 V18',
+  'M88 86 V110 L80 118 V150',
+  'M80 42 H72 L66 36 V20',
+  'M80 118 H72 L68 124 V152',
+  'M10 22 H28 L34 28 H46',
+  'M10 142 H22 L28 148 H44',
+  'M20 84 V70 L14 64 V48 L8 42',
+  'M56 140 H72 L78 134 V126',
+  'M72 100 H78 L84 106 V132',
+  'M26 64 H12',
+  'M30 98 H16 L10 104 V128',
+  'M44 60 V36 L36 28',
+  'M50 100 V92 H56',
+  'M72 60 H80 V68 H86',
+  'M14 150 V136 L20 130 H28',
+  'M34 112 H46 L50 116 V128',
+  'M66 36 H56 L52 40 V48',
+]
 const DOOR_NODES: [number, number][] = [
-  [26, 40], [30, 124], [58, 30], [44, 60], [38, 120], [20, 84], [40, 100], [66, 80],
+  [18, 16], [22, 150], [40, 22], [38, 44], [30, 146], [12, 112], [62, 146], [80, 18],
+  [80, 150], [66, 20], [68, 152], [46, 28], [44, 148], [8, 42], [78, 126], [84, 132],
+  [12, 64], [10, 128], [36, 28], [56, 92], [86, 68], [28, 130], [50, 128], [52, 48],
+  [66, 80], [58, 72], [62, 88], [34, 72], [40, 88], [80, 42], [80, 118], [26, 64], [30, 98],
 ];
 
 // Durées de l'ouverture (ms) : la porte pivote, puis la caméra plonge dans l'embrasure.
@@ -225,11 +249,13 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
       <motion.div className="pointer-events-none absolute inset-0" style={{ x: bgX, y: bgY }}>
         <AiLineArt
           variant="network"
-          className="absolute left-[3%] top-1/2 hidden w-[22vw] max-w-[300px] -translate-y-1/2 text-blue-400/[0.09] md:block"
+          tone="dark"
+          className="absolute left-[2%] top-1/2 hidden w-[20vw] max-w-[280px] -translate-y-1/2 opacity-70 md:block"
         />
         <AiLineArt
           variant="brain"
-          className="absolute right-[3%] top-1/2 hidden w-[24vw] max-w-[320px] -translate-y-1/2 text-blue-400/[0.09] md:block"
+          tone="dark"
+          className="absolute right-[2%] top-1/2 hidden w-[22vw] max-w-[300px] -translate-y-1/2 opacity-70 md:block"
         />
       </motion.div>
 
@@ -243,10 +269,12 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
         {WORDS.map((w, i) => (
           <motion.span
             key={w.t}
-            className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-black text-sm sm:text-xl lg:text-2xl text-blue-400/15"
-            style={{ left: `${w.x}%`, top: `${w.y}%` }}
+            className={`absolute whitespace-nowrap font-black text-[13px] text-blue-300/40 sm:text-lg lg:text-xl ${
+              w.desktopOnly ? 'hidden md:block' : ''
+            }`}
+            style={{ top: `${w.y}%`, [w.side]: 'clamp(12px, 4vw, 64px)' }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, -18, 0] }}
+            animate={{ opacity: 1, y: [0, -6, 0] }}
             transition={{
               opacity: { delay: 0.4 + i * 0.15, duration: 1.2 },
               y: { duration: 4 + (i % 3), repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 },
@@ -391,24 +419,34 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
                     className="absolute inset-x-[16%] bottom-[14%] top-[60%] rounded-sm"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1), inset 0 4px 12px rgba(0,0,0,0.45)' }}
                   />
-                  {/* Circuit gravé dans le battant, parcouru d'impulsions */}
+                  {/* Fibres gravées dans le battant, parcourues d'impulsions lumineuses */}
                   <svg
                     viewBox="0 0 100 160"
                     preserveAspectRatio="none"
-                    className="pointer-events-none absolute inset-0 h-full w-full text-cyan-300/40"
+                    className="pointer-events-none absolute inset-0 h-full w-full"
                     aria-hidden
                   >
                     {DOOR_TRACES.map((d, i) => (
                       <g key={d}>
-                        <path d={d} fill="none" stroke="currentColor" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+                        <path
+                          d={d}
+                          fill="none"
+                          stroke="rgba(103,232,249,0.55)"
+                          strokeWidth={1.2}
+                          vectorEffect="non-scaling-stroke"
+                        />
                         <path
                           d={d}
                           pathLength={100}
                           className="ai-pulse"
-                          style={{ animationDelay: `${i * 0.7}s`, animationDuration: '4s' }}
+                          style={{
+                            animationDelay: `${(i * 0.45) % 4}s`,
+                            animationDuration: `${3 + (i % 3)}s`,
+                            filter: 'drop-shadow(0 0 3px rgba(103,232,249,0.95))',
+                          }}
                           fill="none"
-                          stroke="#a5f3fc"
-                          strokeWidth={2}
+                          stroke="#cffafe"
+                          strokeWidth={2.4}
                           strokeLinecap="round"
                           vectorEffect="non-scaling-stroke"
                         />
@@ -419,11 +457,11 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
                         key={i}
                         cx={x}
                         cy={y}
-                        rx={1.6}
-                        ry={1}
+                        rx={1.5}
+                        ry={0.95}
                         className="ai-node"
-                        style={{ animationDelay: `${i * 0.4}s` }}
-                        fill="currentColor"
+                        style={{ animationDelay: `${(i * 0.3) % 3}s` }}
+                        fill="#a5f3fc"
                       />
                     ))}
                   </svg>

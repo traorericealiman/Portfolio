@@ -94,7 +94,25 @@
 }
 
 
-/* Filigranes IA (AiLineArt) : impulsions le long des fils et nœuds qui battent */
+/* Filigranes IA (AiLineArt) : couleurs par type de fond, impulsions et nœuds */
+.ai-art {
+  --ai-line: rgba(96, 165, 250, 0.38);
+  --ai-node: rgba(165, 243, 252, 0.8);
+  --ai-node-fill: rgba(56, 189, 248, 0.25);
+  --ai-pulse: #67e8f9;
+}
+.ai-art[data-tone='light'] {
+  --ai-line: rgba(37, 99, 235, 0.26);
+  --ai-node: rgba(37, 99, 235, 0.55);
+  --ai-node-fill: rgba(37, 99, 235, 0.12);
+  --ai-pulse: #2563eb;
+}
+.ai-art[data-tone='current'] {
+  --ai-line: color-mix(in srgb, currentColor 22%, transparent);
+  --ai-node: color-mix(in srgb, currentColor 45%, transparent);
+  --ai-node-fill: transparent;
+  --ai-pulse: color-mix(in srgb, currentColor 80%, transparent);
+}
 .ai-art svg {
   display: block;
   width: 100%;
@@ -102,10 +120,12 @@
   overflow: visible;
 }
 .ai-pulse {
-  stroke-dasharray: 6 94;
+  stroke-dasharray: 7 93;
   stroke-dashoffset: 100;
-  opacity: 0.9;
-  animation: ai-pulse 6s linear infinite;
+  animation: ai-pulse 5s linear infinite;
+}
+.ai-art[data-tone='dark'] .ai-pulse {
+  filter: drop-shadow(0 0 3px rgba(103, 232, 249, 0.9));
 }
 .ai-node {
   animation: ai-node 3s ease-in-out infinite;
@@ -116,7 +136,7 @@
   }
 }
 @keyframes ai-node {
-  0%, 100% { opacity: 0.55; }
+  0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {

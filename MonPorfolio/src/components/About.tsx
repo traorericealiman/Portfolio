@@ -71,7 +71,8 @@ export default function About() {
     >
       <AiLineArt
         variant="profile"
-        className="absolute -left-16 bottom-[-30px] w-[300px] text-zinc-900/[0.08] sm:w-[380px]"
+        tone="light"
+        className="absolute -left-10 bottom-[-20px] w-[220px] opacity-90 sm:w-[340px] lg:w-[400px]"
       />
       <div className="relative z-10 mx-auto max-w-6xl px-6 lg:px-10">
         {/* ── Présentation : texte à gauche, photo à droite, alignés ── */}
