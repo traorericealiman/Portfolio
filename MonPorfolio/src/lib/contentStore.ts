@@ -88,7 +88,32 @@ export function formatCompetitionDate(date?: string): string {
 
 const CHANGE_EVENT = 'portfolio_content_change';
 
-let cache: SiteContent = DEFAULT_CONTENT;
+// Copie du dernier contenu reçu, gardée dans le navigateur : dès la 2e visite, le
+// site s'affiche aussitôt avec ces données, puis se met à jour en arrière-plan.
+// (Le contenu ne contient plus les images, seulement leurs URL : il pèse quelques Ko.)
+const STORAGE_KEY = 'portfolio_content_v1';
+const MAX_STORED_CHARS = 300_000;
+
+function readStored(): SiteContent | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? sanitizeContent(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+
+function store(content: SiteContent) {
+  try {
+    const raw = JSON.stringify(content);
+    if (raw.length <= MAX_STORED_CHARS) localStorage.setItem(STORAGE_KEY, raw);
+    else localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* stockage indisponible (navigation privée...) : on s'en passe */
+  }
+}
+
+let cache: SiteContent = readStored() ?? DEFAULT_CONTENT;
 let hasLoaded = false;
 let fetchPromise: Promise<SiteContent> | null = null;
 
@@ -107,6 +132,7 @@ async function loadContent(): Promise<SiteContent> {
     .then((data) => {
       cache = sanitizeContent(data);
       hasLoaded = true;
+      store(cache);
       notifyChange();
       return cache;
     })
@@ -119,6 +145,10 @@ async function loadContent(): Promise<SiteContent> {
     });
   return fetchPromise;
 }
+
+// Le chargement démarre dès que le script s'exécute, en parallèle de l'animation
+// de la porte, au lieu d'attendre le montage des composants.
+loadContent();
 
 /** Force un rechargement du contenu depuis l'API. */
 export function refreshContent() {

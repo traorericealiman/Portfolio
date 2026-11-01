@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useContent } from '../lib/contentStore';
 import type { Project } from '../types/content';
+import AiLineArt from './ai/AiLineArt';
 
 const ease = [0.76, 0, 0.24, 1] as const;
 
@@ -40,9 +41,12 @@ export default function Projects() {
   return (
     <section
       id="projects"
-      className="relative w-full scroll-mt-12"
+      className="relative isolate w-full scroll-mt-12"
       style={{ background: current.bg, color: fg, transition: 'background 0.6s ease, color 0.6s ease' }}
     >
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <AiLineArt variant="network" className="absolute right-6 top-6 hidden w-[240px] opacity-[0.07] md:block" />
+      </div>
       {/* En-tête : titre à gauche, sélecteur de projet à droite */}
       <div className="mx-auto max-w-[1400px] px-6 pt-16 sm:px-10 md:px-16 md:pt-24">
         <div

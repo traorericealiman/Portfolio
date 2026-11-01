@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Github, Linkedin, Mail } from 'lucide-react';
+import AiLineArt from './ai/AiLineArt';
 
 /** `preview` : version figée (miniature de l'intro) — aucune animation ni interaction. */
 export default function Hero({ preview = false }: { preview?: boolean }) {
@@ -10,26 +11,26 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
   const fullText = 'Bienvenue sur le portfolio de TRAORE RICE-ALIMAN';
   
   const floatingWords = [
-    { text: 'Innovation', x: 7, y: 15, delay: 0 },
-    { text: 'Créativité', x: 85, y: 20, delay: 0.5 },
-    { text: 'Passion', x: 80, y: 70, delay: 1.5 },
-    { text: 'Design', x: 15, y: 45, delay: 2 },
-    { text: 'Code', x: 75, y: 50, delay: 2.5 },
-    { text: 'Performance', x: 10, y: 85, delay: 3 },
+    { text: 'Intelligence Artificielle', x: 7, y: 15, delay: 0 },
+    { text: 'Machine Learning', x: 85, y: 20, delay: 0.5 },
+    { text: 'Deep Learning', x: 80, y: 70, delay: 1.5 },
+    { text: 'NLP', x: 15, y: 45, delay: 2 },
+    { text: 'Data', x: 75, y: 50, delay: 2.5 },
+    { text: 'Réseaux de neurones', x: 10, y: 85, delay: 3 },
     { text: 'Vision', x: 90, y: 40, delay: 3.5 },
-    { text: 'UX/UI', x: 12, y: 25, delay: 1 },
-    { text: 'React', x: 70, y: 15, delay: 1.8 },
-    { text: 'Next.js', x: 20, y: 65, delay: 2.2 },
-    { text: 'Tailwind', x: 85, y: 55, delay: 2.8 },
+    { text: 'LLM', x: 12, y: 25, delay: 1 },
+    { text: 'Python', x: 70, y: 15, delay: 1.8 },
+    { text: 'Agents IA', x: 20, y: 65, delay: 2.2 },
+    { text: 'Modèles', x: 85, y: 55, delay: 2.8 },
     { text: 'TypeScript', x: 10, y: 55, delay: 0.8 },
-    { text: 'Frontend', x: 60, y: 30, delay: 1.3 },
-    { text: 'Animation', x: 40, y: 80, delay: 2.7 },
-    { text: 'Responsive', x: 50, y: 10, delay: 0.3 },
-    { text: 'Modern', x: 30, y: 90, delay: 3.2 },
-    { text: 'Elegant', x: 65, y: 75, delay: 1.7 },
+    { text: 'Innovation', x: 60, y: 30, delay: 1.3 },
+    { text: 'Prompt', x: 40, y: 80, delay: 2.7 },
+    { text: 'IA', x: 50, y: 10, delay: 0.3 },
+    { text: 'Design', x: 30, y: 90, delay: 3.2 },
+    { text: 'React', x: 65, y: 75, delay: 1.7 },
     { text: 'Web', x: 45, y: 35, delay: 0.6 },
-    { text: 'Digital', x: 25, y: 20, delay: 2.4 },
-    { text: 'Interface', x: 55, y: 60, delay: 3.1 }
+    { text: 'Algorithmes', x: 25, y: 20, delay: 2.4 },
+    { text: 'Mobile', x: 55, y: 60, delay: 3.1 }
   ];
 
   useEffect(() => {
@@ -80,6 +81,18 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
     <div className="relative min-h-screen bg-zinc-950 overflow-hidden">
       {/* Background Gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"></div>
+
+      {/* Filigranes IA : cerveau-circuit et réseau de neurones */}
+      <AiLineArt
+        variant="brain"
+        animated={!preview}
+        className="absolute right-[-12%] top-[6%] w-[80vw] max-w-[640px] text-blue-400/[0.10] sm:right-[-6%] sm:w-[52vw]"
+      />
+      <AiLineArt
+        variant="network"
+        animated={!preview}
+        className="absolute bottom-[6%] left-[-6%] hidden w-[30vw] max-w-[380px] text-blue-400/[0.08] md:block"
+      />
       
       {/* Moving background glow - disabled on mobile for performance */}
       <div 
@@ -135,7 +148,7 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
                   <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-500/80"></div>
                   <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500/80"></div>
                 </div>
-                <span className="text-zinc-500 text-xs sm:text-sm font-mono">bash  profile</span>
+                <span className="text-zinc-500 text-xs sm:text-sm font-mono">bash — ia-profile</span>
               </div>
               
               {/* Terminal Content */}
@@ -146,6 +159,14 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
                 </div>
                 <div className="text-zinc-400 text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 ml-4">
                   traore-rice-aliman
+                </div>
+
+                <div className="flex items-start gap-2 mb-2">
+                  <span className="text-blue-400 text-sm sm:text-base lg:text-lg">$</span>
+                  <span className="text-zinc-500 text-sm sm:text-base lg:text-lg">cat domaine.txt</span>
+                </div>
+                <div className="text-blue-300/90 text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 ml-4">
+                  Intelligence artificielle · Data · Web &amp; mobile
                 </div>
                 
                 <div className="flex items-start gap-2 mb-2">

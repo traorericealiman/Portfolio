@@ -93,3 +93,33 @@
   animation-play-state: paused !important;
 }
 
+
+/* Filigranes IA (AiLineArt) : impulsions le long des fils et nœuds qui battent */
+.ai-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.ai-pulse {
+  stroke-dasharray: 6 94;
+  stroke-dashoffset: 100;
+  opacity: 0.9;
+  animation: ai-pulse 6s linear infinite;
+}
+.ai-node {
+  animation: ai-node 3s ease-in-out infinite;
+}
+@keyframes ai-pulse {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ai-node {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-pulse { display: none; }
+  .ai-node { animation: none; }
+}

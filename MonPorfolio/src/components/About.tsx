@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { Check, Mail, Phone, Github, Linkedin, Facebook, ImageOff } from 'lucide-react';
 import { useContent } from '../lib/contentStore';
 import { recordSocialClick } from '../lib/analytics';
+import AiLineArt from './ai/AiLineArt';
 
 interface Logo {
   src: string;
@@ -68,6 +69,10 @@ export default function About() {
       id="about"
       className="relative overflow-hidden bg-white py-16 text-zinc-900 sm:py-20 md:py-24 lg:py-28"
     >
+      <AiLineArt
+        variant="profile"
+        className="absolute -left-16 bottom-[-30px] w-[300px] text-zinc-900/[0.08] sm:w-[380px]"
+      />
       <div className="relative z-10 mx-auto max-w-6xl px-6 lg:px-10">
         {/* ── Présentation : texte à gauche, photo à droite, alignés ── */}
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
@@ -90,9 +95,9 @@ export default function About() {
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="mb-8 text-4xl font-light leading-[1.05] tracking-tighter sm:text-5xl md:text-6xl"
             >
-              Fusionner le <span className="font-serif italic">design</span>
+              Rendre l'<span className="font-serif italic">intelligence</span>
               <br />
-              et la <span className="font-bold">performance</span>.
+              <span className="font-bold">artificielle</span> utile.
             </motion.h2>
 
             <motion.p

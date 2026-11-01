@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import AiLineArt from './ai/AiLineArt';
 
 const STACK = [
   {
@@ -73,8 +74,12 @@ export default function Technologies() {
   }, [active, paused]);
 
   return (
-    <section id="technologies" className="w-full bg-white py-24 sm:py-32">
-      <div className="mx-auto max-w-6xl px-6 lg:px-12">
+    <section id="technologies" className="relative w-full overflow-hidden bg-white py-24 sm:py-32">
+      <AiLineArt
+        variant="brain"
+        className="absolute -right-16 top-10 w-[300px] text-zinc-900/[0.08] sm:w-[380px]"
+      />
+      <div className="relative mx-auto max-w-6xl px-6 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -86,7 +91,7 @@ export default function Technologies() {
             TECH <span className="text-zinc-200">STACK.</span>
           </h2>
           <p className="max-w-[320px] text-base font-light leading-relaxed text-zinc-500">
-            Les technologies que j'utilise pour concevoir, développer et déployer.
+            Les technologies que j'utilise pour concevoir des solutions intelligentes, du modèle à l'interface.
           </p>
         </motion.div>
 

@@ -55,14 +55,14 @@ class HttpError extends Error {
   }
 }
 
-function json(req: Request, body: unknown, status = 200): Response {
+function json(req: Request, body: unknown, status = 200, cache = "no-store"): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       ...corsHeaders(req),
       "Content-Type": "application/json",
       "X-Content-Type-Options": "nosniff",
-      "Cache-Control": "no-store",
+      "Cache-Control": cache,
     },
   });
 }
@@ -287,22 +287,64 @@ async function recordLoginFailure(ip: string, username: string) {
   }
 }
 
+// --- Images : servies à part, avec une URL versionnée ---------------------------
+// Les images sont stockées en base64 dans la base. Les renvoyer dans /content
+// faisait plusieurs Mo par visite : /content renvoie maintenant une URL par image
+// (/image/<table>/<id>?v=<empreinte>), que le navigateur met en cache pour un an.
+
+const PUBLIC_BASE = `${Deno.env.get("SUPABASE_URL")}/functions/v1/api`;
+const EMPTY_MD5 = "d41d8cd98f00b204e9800998ecf8427e";
+const IMAGE_TABLES = { competitions: "image", creations: "image", projects: "image", profile: "photo_url" } as const;
+
+function imageUrl(table: keyof typeof IMAGE_TABLES, id: string | number, hash: string | undefined, raw: string | undefined) {
+  if (hash === undefined) return raw ?? ""; // colonne d'empreinte absente : ancien comportement
+  return hash === EMPTY_MD5 ? "" : `${PUBLIC_BASE}/image/${table}/${id}?v=${hash.slice(0, 12)}`;
+}
+
+// L'Admin renvoie ces URL telles quelles quand l'image n'a pas changé : on garde alors l'image en base.
+const isOwnImageUrl = (v: unknown) => typeof v === "string" && v.includes("/functions/v1/api/image/");
+
+async function serveImage(table: string, id: string, versioned: boolean): Promise<Response> {
+  if (!Object.hasOwn(IMAGE_TABLES, table) || !ID_RE.test(id)) throw new HttpError(404, "Image introuvable");
+  const col = IMAGE_TABLES[table as keyof typeof IMAGE_TABLES];
+  const row = check(await db.from(table).select(col).eq("id", id).maybeSingle());
+  const value: string = (row?.[col] ?? "").trim();
+
+  if (/^https?:\/\//i.test(value)) return Response.redirect(value, 302);
+  const m = value.match(/^data:(image\/(?:png|jpe?g|webp|gif|avif));base64,(.+)$/is);
+  if (!m) throw new HttpError(404, "Image introuvable");
+  const bytes = Uint8Array.from(atob(m[2].replace(/\s/g, "")), (c) => c.charCodeAt(0));
+  return new Response(bytes, {
+    headers: {
+      "Content-Type": m[1].toLowerCase(),
+      "Cache-Control": versioned ? "public, max-age=31536000, immutable" : "public, max-age=300",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
+
 // --- Sérialisation (snake_case DB -> camelCase JSON) -------------------------
 
 const serializers = {
   profile: (r: any) => r && ({
-    description: r.description, email: r.email, phone: r.phone, photoUrl: r.photo_url,
+    description: r.description, email: r.email, phone: r.phone,
+    photoUrl: imageUrl("profile", r.id ?? 1, r.photo_hash, r.photo_url),
     github: r.github, linkedin: r.linkedin, facebook: r.facebook,
   }),
   competitions: (r: any) => ({
-    id: r.id, title: r.title, project: r.project, result: r.result, description: r.description, image: r.image,
-    date: r.date ?? "",
+    id: r.id, title: r.title, project: r.project, result: r.result, description: r.description,
+    image: imageUrl("competitions", r.id, r.image_hash, r.image), date: r.date ?? "",
   }),
-  creations: (r: any) => ({ id: r.id, title: r.title, category: r.category, color: r.color, image: r.image }),
+  creations: (r: any) => ({
+    id: r.id, title: r.title, category: r.category, color: r.color,
+    image: imageUrl("creations", r.id, r.image_hash, r.image),
+  }),
   projects: (r: any) => ({
     id: r.id, title: r.title, description: r.description, tech: r.tech ?? [], accent: r.accent, bg: r.bg,
     textColor: r.text_color, isDark: r.is_dark, year: r.year, category: r.category, github: r.github,
-    link: r.link, image: r.image,
+    link: r.link, image: imageUrl("projects", r.id, r.image_hash, r.image),
   }),
 };
 
@@ -330,11 +372,31 @@ const LISTS: Record<"competitions" | "creations" | "projects", { prefix: string;
 };
 
 function toRow(fields: Field[], data: Record<string, any>) {
-  return Object.fromEntries(fields.map(([key, col, def, validate]) => [col, validate(data[key] ?? def, key)]));
+  return Object.fromEntries(
+    fields
+      .filter(([key, col]) => !(col === "image" && isOwnImageUrl(data[key])))
+      .map(([key, col, def, validate]) => [col, validate(data[key] ?? def, key)]),
+  );
 }
 
-const listRows = async (table: keyof typeof LISTS) =>
-  check(await db.from(table).select("*").order("position").order("created_at"));
+// Colonnes renvoyées au site : tout sauf l'image elle-même (remplacée par son empreinte).
+const lightColumns = (table: keyof typeof LISTS) =>
+  ["id", ...LISTS[table].fields.map(([, col]) => col).filter((c) => c !== "image"), "image_hash"].join(",");
+const PROFILE_COLUMNS = "id,description,email,phone,github,linkedin,facebook,photo_hash";
+
+async function listRows(table: keyof typeof LISTS) {
+  const light = await db.from(table).select(lightColumns(table)).order("position").order("created_at");
+  if (!light.error) return light.data as any[];
+  // Migration des empreintes pas encore appliquée : on renvoie tout, comme avant.
+  console.warn("listRows: repli sur select(*)", light.error.message);
+  return check(await db.from(table).select("*").order("position").order("created_at"));
+}
+
+async function getProfileRow() {
+  const light = await db.from("profile").select(PROFILE_COLUMNS).eq("id", 1).maybeSingle();
+  if (!light.error) return light.data;
+  return check(await db.from("profile").select("*").eq("id", 1).maybeSingle());
+}
 
 // --- Statistiques ------------------------------------------------------------
 
@@ -374,24 +436,26 @@ async function handle(req: Request): Promise<Response> {
 
   if (method === "GET" && path === "/health") return json(req, { status: "ok" });
 
-  // Contenu public
+  if (method === "GET" && root === "image" && seg.length === 3) {
+    return serveImage(seg[1], seg[2], new URL(req.url).searchParams.has("v"));
+  }
+
+  // Contenu public (sans les images) : le navigateur peut le garder 30 s,
+  // puis le resservir en le rafraîchissant en arrière-plan.
   if (method === "GET" && path === "/content") {
     const [profile, competitions, creations, projects] = await Promise.all([
-      db.from("profile").select("*").eq("id", 1).maybeSingle().then(check),
-      listRows("competitions"), listRows("creations"), listRows("projects"),
+      getProfileRow(), listRows("competitions"), listRows("creations"), listRows("projects"),
     ]);
     return json(req, {
       profile: serializers.profile(profile),
       competitions: competitions.map(serializers.competitions),
       creations: creations.map(serializers.creations),
       projects: projects.map(serializers.projects),
-    });
+    }, 200, "public, max-age=30, stale-while-revalidate=600");
   }
 
   if (root === "profile" && seg.length === 1) {
-    if (method === "GET") {
-      return json(req, serializers.profile(check(await db.from("profile").select("*").eq("id", 1).maybeSingle())));
-    }
+    if (method === "GET") return json(req, serializers.profile(await getProfileRow()));
     if (method === "PUT") {
       await requireAdmin(req);
       const d = await readBody(req);
@@ -402,7 +466,7 @@ async function handle(req: Request): Promise<Response> {
         description: str(d.description, "description"),
         email,
         phone: str(d.phone, "phone", 40),
-        photo_url: image(d.photoUrl, "photoUrl"),
+        ...(isOwnImageUrl(d.photoUrl) ? {} : { photo_url: image(d.photoUrl, "photoUrl") }),
         github: url(d.github, "github"),
         linkedin: url(d.linkedin, "linkedin"),
         facebook: url(d.facebook, "facebook"),

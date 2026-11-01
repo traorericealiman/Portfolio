@@ -9,20 +9,35 @@ import {
   useTransform,
 } from 'framer-motion';
 import Hero from './Hero';
+import AiLineArt from './ai/AiLineArt';
 
 type Phase = 'idle' | 'opening';
 
 const NAME = 'Traoré Rice-Aliman';
-const PROMPT = 'Cliquez sur la porte pour entrer';
+const PROMPT = 'Cliquez sur la porte pour entrer dans mon univers IA';
 const WORDS = [
-  { t: 'Innovation', x: 8, y: 18 },
-  { t: 'Design', x: 14, y: 52 },
-  { t: 'React', x: 80, y: 16 },
-  { t: 'Code', x: 86, y: 48 },
-  { t: 'Performance', x: 10, y: 82 },
-  { t: 'TypeScript', x: 84, y: 80 },
-  { t: 'UX/UI', x: 24, y: 30 },
-  { t: 'Vision', x: 70, y: 66 },
+  { t: 'Intelligence Artificielle', x: 12, y: 18 },
+  { t: 'Deep Learning', x: 14, y: 52 },
+  { t: 'Machine Learning', x: 82, y: 16 },
+  { t: 'NLP', x: 86, y: 48 },
+  { t: 'Réseaux de neurones', x: 13, y: 82 },
+  { t: 'Data', x: 84, y: 80 },
+  { t: 'LLM', x: 24, y: 32 },
+  { t: 'Vision', x: 72, y: 66 },
+];
+
+// Pistes de circuit gravées sur le battant (repère 100 × 160, la poignée est vers x = 88, y = 80).
+const DOOR_TRACES = [
+  'M86 80 H66 L58 72 H34 L26 64 V40',
+  'M86 80 H70 L62 88 H40 L30 98 V124',
+  'M66 80 V58 L58 50 V30',
+  'M58 72 V60 H44',
+  'M62 88 V112 L54 120 H38',
+  'M34 72 V84 H20',
+  'M40 88 V100',
+];
+const DOOR_NODES: [number, number][] = [
+  [26, 40], [30, 124], [58, 30], [44, 60], [38, 120], [20, 84], [40, 100], [66, 80],
 ];
 
 // Durées de l'ouverture (ms) : la porte pivote, puis la caméra plonge dans l'embrasure.
@@ -206,6 +221,18 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
         }}
       />
 
+      {/* Filigranes IA : réseau de neurones et cerveau-circuit */}
+      <motion.div className="pointer-events-none absolute inset-0" style={{ x: bgX, y: bgY }}>
+        <AiLineArt
+          variant="network"
+          className="absolute left-[3%] top-1/2 hidden w-[22vw] max-w-[300px] -translate-y-1/2 text-blue-400/[0.09] md:block"
+        />
+        <AiLineArt
+          variant="brain"
+          className="absolute right-[3%] top-1/2 hidden w-[24vw] max-w-[320px] -translate-y-1/2 text-blue-400/[0.09] md:block"
+        />
+      </motion.div>
+
       {/* Mots flottants (comme le Hero) */}
       <motion.div
         className="absolute inset-0 pointer-events-none"
@@ -364,6 +391,51 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
                     className="absolute inset-x-[16%] bottom-[14%] top-[60%] rounded-sm"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1), inset 0 4px 12px rgba(0,0,0,0.45)' }}
                   />
+                  {/* Circuit gravé dans le battant, parcouru d'impulsions */}
+                  <svg
+                    viewBox="0 0 100 160"
+                    preserveAspectRatio="none"
+                    className="pointer-events-none absolute inset-0 h-full w-full text-cyan-300/40"
+                    aria-hidden
+                  >
+                    {DOOR_TRACES.map((d, i) => (
+                      <g key={d}>
+                        <path d={d} fill="none" stroke="currentColor" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+                        <path
+                          d={d}
+                          pathLength={100}
+                          className="ai-pulse"
+                          style={{ animationDelay: `${i * 0.7}s`, animationDuration: '4s' }}
+                          fill="none"
+                          stroke="#a5f3fc"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      </g>
+                    ))}
+                    {DOOR_NODES.map(([x, y], i) => (
+                      <ellipse
+                        key={i}
+                        cx={x}
+                        cy={y}
+                        rx={1.6}
+                        ry={1}
+                        className="ai-node"
+                        style={{ animationDelay: `${i * 0.4}s` }}
+                        fill="currentColor"
+                      />
+                    ))}
+                  </svg>
+
+                  {/* Rayon de scan */}
+                  <motion.div
+                    className="pointer-events-none absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent shadow-[0_0_12px_rgba(103,232,249,0.8)]"
+                    initial={{ top: '0%', opacity: 0 }}
+                    animate={{ top: ['4%', '96%'], opacity: [0, 1, 1, 0] }}
+                    transition={{ duration: 3.2, repeat: Infinity, repeatDelay: 1.2, ease: 'easeInOut' }}
+                  />
+
                   {/* Pancarte accrochée à la porte */}
                   <div className="pointer-events-none absolute left-[20%] top-[7%] w-[60%]">
                     <motion.div
@@ -393,18 +465,28 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
                           <br />
                           {NAME.slice(7)}
                         </p>
+                        <p className="relative mt-[2cqw] whitespace-nowrap text-[2.7cqw] font-bold uppercase tracking-[0.08em] text-[#0a66c2]">
+                          Intelligence Artificielle
+                        </p>
                       </div>
                     </motion.div>
                   </div>
 
-                  {/* Poignée */}
-                  <div
-                    className="absolute right-[7%] top-1/2 h-[9%] w-[4.5%] min-w-[9px] -translate-y-1/2 rounded-full"
-                    style={{
-                      background: 'linear-gradient(135deg,#fff,#a8c8e8 50%,#4a6b8a)',
-                      boxShadow: '0 0 12px rgba(74,158,221,0.8), 0 2px 6px rgba(0,0,0,0.6)',
-                    }}
-                  />
+                  {/* Poignée : capteur lumineux */}
+                  <div className="absolute right-[7%] top-1/2 h-[9%] w-[4.5%] min-w-[9px] -translate-y-1/2">
+                    <motion.span
+                      className="absolute inset-0 rounded-full border border-cyan-300/70"
+                      animate={{ scale: [1, 2.2], opacity: [0.7, 0] }}
+                      transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                    />
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: 'linear-gradient(135deg,#fff,#a5f3fc 45%,#0e7490)',
+                        boxShadow: '0 0 14px rgba(103,232,249,0.9), 0 2px 6px rgba(0,0,0,0.6)',
+                      }}
+                    />
+                  </div>
                   {/* Reflet balayant */}
                   <motion.div
                     className="pointer-events-none absolute inset-y-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent"
@@ -418,6 +500,21 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
           </motion.div>
         </div>
       </motion.div>
+
+      {/* Accès autorisé */}
+      <AnimatePresence>
+        {phase === 'opening' && (
+          <motion.p
+            key="access"
+            className="pointer-events-none absolute left-0 right-0 top-[8vh] z-20 text-center font-mono text-xs uppercase tracking-[0.35em] text-cyan-300 sm:text-sm"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: [0, 1, 1, 0], y: 0 }}
+            transition={{ duration: 1.6, times: [0, 0.15, 0.7, 1] }}
+          >
+            Accès autorisé · Bienvenue
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       {/* Invitation */}
       <motion.div
