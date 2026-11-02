@@ -31,7 +31,7 @@ interface Options {
 type Box = { x: number; y: number; w: number; h: number };
 
 /** Position d'un élément relativement à `ancestor`, sans tenir compte des transformations. */
-function offsetBox(el: HTMLElement, ancestor: HTMLElement): Box | null {
+export function offsetBox(el: HTMLElement, ancestor: HTMLElement): Box | null {
   let x = 0;
   let y = 0;
   let node: HTMLElement | null = el;

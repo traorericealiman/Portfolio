@@ -9,6 +9,7 @@ import {
   useTransform,
 } from 'framer-motion';
 import Hero from './Hero';
+import NeuronField from './NeuronField';
 import { useFloatingWords } from '../lib/useFloatingWords';
 
 type Phase = 'idle' | 'opening';
@@ -250,6 +251,16 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
             'radial-gradient(ellipse at 50% 60%, rgba(10,102,194,0.22) 0%, transparent 55%)',
         }}
       />
+
+      {/* Neurones dessinés : leurs axones mènent à la porte */}
+      <motion.div
+        className="pointer-events-none absolute inset-0"
+        style={{ x: bgX, y: bgY }}
+        animate={{ opacity: phase === 'idle' ? 1 : 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <NeuronField rootRef={rootRef} doorRef={frameRef} active={phase === 'idle'} />
+      </motion.div>
 
       {/* Mots flottants (comme le Hero) */}
       <motion.div
