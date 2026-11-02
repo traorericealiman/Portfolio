@@ -4,23 +4,27 @@ import { offsetBox } from '../lib/useFloatingWords';
 /**
  * Neurones dessinés à la main par le code, à la manière des planches de
  * Ramón y Cajal : corps cellulaires irréguliers, dendrites courbes qui
- * s'affinent en se ramifiant, et un axone qui file vers la porte. De petits
- * influx nerveux le parcourent en continu ; approcher la souris d'un neurone
- * le fait s'activer davantage.
+ * s'affinent en se ramifiant, et un axone qui file vers une cible (la porte,
+ * puis le terminal de l'accueil). De petits influx nerveux le parcourent en
+ * continu ; approcher la souris d'un neurone le fait s'activer davantage.
  *
  * Tout est généré à partir d'une graine fixe : le dessin est toujours le même
  * (comme une illustration), mais il s'adapte à la taille de l'écran.
  */
 
 type Pt = { x: number; y: number };
+type Box = { x: number; y: number; w: number; h: number };
 type Seg = { a: Pt; c: Pt; b: Pt; w: number; alpha: number; t0: number; dur: number };
 type Soma = { x: number; y: number; r: number; outline: Pt[]; t0: number };
 type Route = { pts: Pt[]; acc: number[]; length: number; neuron: number; axon: boolean };
 type Pulse = { route: Route; pos: number; speed: number };
 
+export type Blocked = (b: Box) => boolean;
+
 const SEED = 20260211;
 const GROW_DELAY = 300; // ms : laisse l'encadrement de la porte apparaître d'abord
 const MAX_PULSES = 16;
+const CELL = 6; // taille d'une case de la carte d'occupation (px)
 
 function mulberry32(seed: number) {
   let a = seed;
@@ -57,10 +61,38 @@ function pointAt(r: Route, d: number): Pt {
   return lerp(r.pts[i - 1], r.pts[i], (dist - r.acc[i - 1]) / span);
 }
 
-type Box = { x: number; y: number; w: number; h: number };
+export type NeuronVariant = 'door' | 'hero';
 
-function build(W: number, H: number, door: Box | null) {
-  const rng = mulberry32(SEED + Math.round(W / 200));
+function spotsFor(variant: NeuronVariant, small: boolean) {
+  if (variant === 'door') {
+    return small
+      ? [
+          { x: 0.12, y: 0.13, k: 1 },
+          { x: 0.88, y: 0.87, k: 1 },
+        ]
+      : [
+          { x: 0.12, y: 0.64, k: 1 },
+          { x: 0.87, y: 0.34, k: 1 },
+          { x: 0.25, y: 0.15, k: 0.7 },
+          { x: 0.78, y: 0.88, k: 0.7 },
+        ];
+  }
+  // Accueil : les neurones encadrent le terminal, leurs axones y aboutissent.
+  return small
+    ? [
+        { x: 0.86, y: 0.2, k: 1 },
+        { x: 0.14, y: 0.86, k: 1 },
+      ]
+    : [
+        { x: 0.07, y: 0.42, k: 0.9 },
+        { x: 0.93, y: 0.6, k: 0.9 },
+        { x: 0.82, y: 0.14, k: 0.65 },
+        { x: 0.2, y: 0.9, k: 0.65 },
+      ];
+}
+
+function build(W: number, H: number, target: Box | null, variant: NeuronVariant) {
+  const rng = mulberry32(SEED + (variant === 'hero' ? 7 : 0) + Math.round(W / 200));
   const segs: Seg[] = [];
   const somas: Soma[] = [];
   const routes: Route[] = [];
@@ -68,27 +100,15 @@ function build(W: number, H: number, door: Box | null) {
 
   const small = W < 640;
   const scale = small ? 0.58 : 0.9 * Math.min(1.25, Math.max(0.8, Math.min(W / 1280, H / 800)));
-  const dc = door ? { x: door.x + door.w / 2, y: door.y + door.h / 2 } : { x: W / 2, y: H / 2 };
+  const dc = target ? { x: target.x + target.w / 2, y: target.y + target.h / 2 } : { x: W / 2, y: H / 2 };
   const pad = 18;
-  const inDoor = (p: Pt) =>
-    !!door && p.x > door.x - pad && p.x < door.x + door.w + pad && p.y > door.y - pad && p.y < door.y + door.h + pad;
+  const inTarget = (p: Pt) =>
+    !!target && p.x > target.x - pad && p.x < target.x + target.w + pad && p.y > target.y - pad && p.y < target.y + target.h + pad;
 
-  const spots: { x: number; y: number; k: number }[] = small
-    ? [
-        { x: 0.12, y: 0.13, k: 1 },
-        { x: 0.88, y: 0.87, k: 1 },
-      ]
-    : [
-        { x: 0.12, y: 0.64, k: 1 },
-        { x: 0.87, y: 0.34, k: 1 },
-        { x: 0.25, y: 0.15, k: 0.7 },
-        { x: 0.78, y: 0.88, k: 0.7 },
-      ];
-
-  spots.forEach((spot, n) => {
+  spotsFor(variant, small).forEach((spot, n) => {
     const s = scale * spot.k;
     const soma: Pt = { x: spot.x * W, y: spot.y * H };
-    const out = Math.atan2(soma.y - dc.y, soma.x - dc.x); // direction qui s'éloigne de la porte
+    const out = Math.atan2(soma.y - dc.y, soma.x - dc.x); // direction qui s'éloigne de la cible
     const t0 = GROW_DELAY + n * 180;
 
     // Corps cellulaire : contour irrégulier, jamais un cercle parfait.
@@ -104,7 +124,7 @@ function build(W: number, H: number, door: Box | null) {
     const grow = (p: Pt, angle: number, len: number, w: number, depth: number, start: number, trail: Pt[]) => {
       const bend = (rng() - 0.5) * 1.1;
       const end = { x: p.x + Math.cos(angle + bend * 0.45) * len, y: p.y + Math.sin(angle + bend * 0.45) * len };
-      if (inDoor(end)) return;
+      if (inTarget(end)) return;
       const mid = lerp(p, end, 0.5);
       const perp = angle + Math.PI / 2;
       const c = { x: mid.x + Math.cos(perp) * bend * len * 0.32, y: mid.y + Math.sin(perp) * bend * len * 0.32 };
@@ -122,15 +142,8 @@ function build(W: number, H: number, door: Box | null) {
         const base = quad(p, c, end, t);
         const sa = angle + (rng() < 0.5 ? 1 : -1) * (0.9 + rng() * 0.6);
         const sl = len * (0.12 + rng() * 0.12);
-        segs.push({
-          a: base,
-          c: lerp(base, { x: base.x + Math.cos(sa) * sl, y: base.y + Math.sin(sa) * sl }, 0.5),
-          b: { x: base.x + Math.cos(sa) * sl, y: base.y + Math.sin(sa) * sl },
-          w: w * 0.45,
-          alpha: 0.2,
-          t0: start + seg.dur * t,
-          dur: sl * 7,
-        });
+        const tip = { x: base.x + Math.cos(sa) * sl, y: base.y + Math.sin(sa) * sl };
+        segs.push({ a: base, c: lerp(base, tip, 0.5), b: tip, w: w * 0.45, alpha: 0.2, t0: start + seg.dur * t, dur: sl * 7 });
       }
       const kids = rng() < 0.28 ? 3 : 2;
       for (let k = 0; k < kids; k++) {
@@ -146,18 +159,18 @@ function build(W: number, H: number, door: Box | null) {
       grow(p, a, (52 + rng() * 34) * s, 2.3 * s, small ? 3 : 4, t0 + 220, [soma]);
     }
 
-    // Axone : long fil ondulant du corps cellulaire jusqu'au bord de la porte.
-    if (door) {
-      const target = {
-        x: Math.max(door.x - 10, Math.min(door.x + door.w + 10, soma.x)),
-        y: Math.max(door.y - 10, Math.min(door.y + door.h + 10, soma.y + (rng() - 0.5) * door.h * 0.4)),
+    // Axone : long fil ondulant du corps cellulaire jusqu'au bord de la cible.
+    if (target) {
+      const tgt = {
+        x: Math.max(target.x - 10, Math.min(target.x + target.w + 10, soma.x)),
+        y: Math.max(target.y - 10, Math.min(target.y + target.h + 10, soma.y + (rng() - 0.5) * target.h * 0.4)),
       };
-      if (soma.x < door.x) target.x = door.x - 10;
-      else if (soma.x > door.x + door.w) target.x = door.x + door.w + 10;
+      if (soma.x < target.x) tgt.x = target.x - 10;
+      else if (soma.x > target.x + target.w) tgt.x = target.x + target.w + 10;
       const from = { x: soma.x - Math.cos(out) * r, y: soma.y - Math.sin(out) * r };
       const steps = 9;
-      const dir = Math.atan2(target.y - from.y, target.x - from.x);
-      const dist = Math.hypot(target.x - from.x, target.y - from.y);
+      const dir = Math.atan2(tgt.y - from.y, tgt.x - from.x);
+      const dist = Math.hypot(tgt.x - from.x, tgt.y - from.y);
       const amp = Math.min(26, dist * 0.06) * (0.6 + rng() * 0.6);
       const phase = rng() * Math.PI;
       let prev = from;
@@ -166,16 +179,15 @@ function build(W: number, H: number, door: Box | null) {
       for (let i = 1; i <= steps; i++) {
         const t = i / steps;
         const wave = Math.sin(t * Math.PI * 2.2 + phase) * amp * Math.sin(t * Math.PI);
-        const base = lerp(from, target, t);
+        const base = lerp(from, tgt, t);
         const p = { x: base.x + Math.cos(dir + Math.PI / 2) * wave, y: base.y + Math.sin(dir + Math.PI / 2) * wave };
-        const c = lerp(prev, p, 0.5);
-        const seg: Seg = { a: prev, c, b: p, w: 1.4 * s * (1 - t * 0.45), alpha: 0.36, t0: start, dur: (dist / steps) * 5 };
+        const seg: Seg = { a: prev, c: lerp(prev, p, 0.5), b: p, w: 1.4 * s * (1 - t * 0.45), alpha: 0.36, t0: start, dur: (dist / steps) * 5 };
         segs.push(seg);
         trail = trail.concat(sampleSeg(seg, 4));
         start += seg.dur;
         prev = p;
       }
-      // Terminaisons : quelques boutons au contact de la porte
+      // Terminaisons : quelques boutons au contact de la cible
       for (let k = 0; k < 3; k++) {
         const a = dir + (k - 1) * 0.55;
         const l = (9 + rng() * 6) * s;
@@ -188,21 +200,79 @@ function build(W: number, H: number, door: Box | null) {
   });
 
   const growEnd = Math.max(...segs.map((s) => s.t0 + s.dur), 0);
-  return { segs, somas, routes, boutons, growEnd };
+  // Moment où le dernier axone touche la cible
+  const connectAt = boutons.length ? Math.max(...boutons.map((b) => b.t0)) : growEnd;
+
+  // Carte d'occupation : quelles zones de l'écran sont traversées par une fibre.
+  const cols = Math.ceil(W / CELL);
+  const rows = Math.ceil(H / CELL);
+  const grid = new Uint8Array(cols * rows);
+  const mark = (p: Pt, radius: number) => {
+    const c0 = Math.max(0, Math.floor((p.x - radius) / CELL));
+    const c1 = Math.min(cols - 1, Math.floor((p.x + radius) / CELL));
+    const r0 = Math.max(0, Math.floor((p.y - radius) / CELL));
+    const r1 = Math.min(rows - 1, Math.floor((p.y + radius) / CELL));
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) grid[r * cols + c] = 1;
+  };
+  for (const s of segs) {
+    const len = Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
+    const n = Math.max(2, Math.ceil(len / 3));
+    for (let i = 0; i <= n; i++) mark(quad(s.a, s.c, s.b, i / n), s.w / 2 + 2);
+  }
+  for (const so of somas) mark(so, so.r * 2.4);
+  const blocked: Blocked = (b) => {
+    const c0 = Math.max(0, Math.floor(b.x / CELL));
+    const c1 = Math.min(cols - 1, Math.floor((b.x + b.w) / CELL));
+    const r0 = Math.max(0, Math.floor(b.y / CELL));
+    const r1 = Math.min(rows - 1, Math.floor((b.y + b.h) / CELL));
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (grid[r * cols + c]) return true;
+    return false;
+  };
+
+  return { segs, somas, routes, boutons, growEnd, connectAt, blocked };
 }
 
 interface Props {
   rootRef: RefObject<HTMLElement>;
-  doorRef: RefObject<HTMLElement>;
-  /** false pendant l'ouverture de la porte : plus de nouveaux influx. */
+  /** Élément vers lequel convergent les axones (la porte, le terminal). */
+  targetRef: RefObject<HTMLElement>;
+  variant: NeuronVariant;
+  /** false : plus de nouveaux influx (ex. pendant l'ouverture de la porte). */
   active: boolean;
+  /** Croissance animée au chargement (sinon le dessin est complet d'emblée). */
+  grow?: boolean;
+  /** Influx animés (false : dessin figé, ex. miniature de l'intro). */
+  animated?: boolean;
+  /** Passe directement à la fin de la croissance. */
+  fastForward?: boolean;
+  /** Appelé quand le dernier axone touche la cible. */
+  onConnected?: () => void;
+  /** Transmet la carte des zones occupées par les fibres (pour placer les mots). */
+  onOccupancy?: (blocked: Blocked) => void;
 }
 
-export default function NeuronField({ rootRef, doorRef, active }: Props) {
+export default function NeuronField({
+  rootRef,
+  targetRef,
+  variant,
+  active,
+  grow = true,
+  animated = true,
+  fastForward = false,
+  onConnected,
+  onOccupancy,
+}: Props) {
   const baseRef = useRef<HTMLCanvasElement>(null);
   const pulseRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
+  const callbacks = useRef({ onConnected, onOccupancy });
+  callbacks.current = { onConnected, onOccupancy };
+  const skipRef = useRef<() => void>(() => undefined);
+
+  useEffect(() => {
+    if (fastForward) skipRef.current();
+  }, [fastForward]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -214,33 +284,23 @@ export default function NeuronField({ rootRef, doorRef, active }: Props) {
     if (!bctx || !pctx) return;
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let scene = build(1, 1, null);
+    const live = animated && !reduce;
+    let scene = build(1, 1, null, variant);
     let W = 0;
     let H = 0;
     let dpr = 1;
     let t0 = performance.now();
     let grown = false;
+    let connected = false;
     let raf = 0;
     let pulses: Pulse[] = [];
     let lastSpawn = 0;
     const pointer = { x: -9999, y: -9999 };
 
-    const setup = () => {
-      W = root.offsetWidth;
-      H = root.offsetHeight;
-      dpr = Math.min(2, window.devicePixelRatio || 1);
-      for (const c of [base, top]) {
-        c.width = Math.round(W * dpr);
-        c.height = Math.round(H * dpr);
-        c.style.width = `${W}px`;
-        c.style.height = `${H}px`;
-      }
-      const door = doorRef.current ? offsetBox(doorRef.current, root) : null;
-      scene = build(W, H, door);
-      pulses = [];
-      grown = reduce;
-      t0 = performance.now();
-      if (reduce) drawBase(Infinity);
+    const connect = () => {
+      if (connected) return;
+      connected = true;
+      callbacks.current.onConnected?.();
     };
 
     const drawBase = (now: number) => {
@@ -273,13 +333,12 @@ export default function NeuronField({ rootRef, doorRef, active }: Props) {
         bctx.fill();
         // contour irrégulier lissé
         const pts = so.outline.map((p) => lerp(so, p, g));
+        const first = lerp(pts[pts.length - 1], pts[0], 0.5);
         bctx.beginPath();
+        bctx.moveTo(first.x, first.y);
         for (let i = 0; i < pts.length; i++) {
-          const p = pts[i];
-          const q = pts[(i + 1) % pts.length];
-          const m = lerp(p, q, 0.5);
-          if (i === 0) bctx.moveTo(lerp(pts[pts.length - 1], p, 0.5).x, lerp(pts[pts.length - 1], p, 0.5).y);
-          bctx.quadraticCurveTo(p.x, p.y, m.x, m.y);
+          const m = lerp(pts[i], pts[(i + 1) % pts.length], 0.5);
+          bctx.quadraticCurveTo(pts[i].x, pts[i].y, m.x, m.y);
         }
         bctx.closePath();
         bctx.fillStyle = 'rgba(14, 116, 144, 0.55)';
@@ -301,6 +360,34 @@ export default function NeuronField({ rootRef, doorRef, active }: Props) {
       }
     };
 
+    const finishGrowth = () => {
+      grown = true;
+      drawBase(Infinity);
+      connect();
+    };
+    skipRef.current = () => {
+      if (!grown) finishGrowth();
+    };
+
+    const setup = () => {
+      W = root.offsetWidth;
+      H = root.offsetHeight;
+      if (!W || !H) return;
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      for (const c of [base, top]) {
+        c.width = Math.round(W * dpr);
+        c.height = Math.round(H * dpr);
+        c.style.width = `${W}px`;
+        c.style.height = `${H}px`;
+      }
+      const target = targetRef.current ? offsetBox(targetRef.current, root) : null;
+      scene = build(W, H, target, variant);
+      pulses = [];
+      t0 = performance.now();
+      callbacks.current.onOccupancy?.(scene.blocked);
+      if (!grow || reduce || grown) finishGrowth();
+    };
+
     const spawn = (now: number) => {
       if (!activeRef.current || pulses.length >= MAX_PULSES || scene.routes.length === 0) return;
       // Neurone le plus proche de la souris : il s'active davantage.
@@ -318,7 +405,10 @@ export default function NeuronField({ rootRef, doorRef, active }: Props) {
       lastSpawn = now;
       const pool = near >= 0 ? scene.routes.filter((r) => r.neuron === near) : scene.routes;
       const axons = pool.filter((r) => r.axon);
-      const route = axons.length && Math.random() < 0.4 ? axons[Math.floor(Math.random() * axons.length)] : pool[Math.floor(Math.random() * pool.length)];
+      const route =
+        axons.length && Math.random() < 0.4
+          ? axons[Math.floor(Math.random() * axons.length)]
+          : pool[Math.floor(Math.random() * pool.length)];
       if (route) pulses.push({ route, pos: 0, speed: route.axon ? 0.17 : 0.11 + Math.random() * 0.05 });
     };
 
@@ -365,52 +455,48 @@ export default function NeuronField({ rootRef, doorRef, active }: Props) {
       const t = now - t0;
       if (!grown) {
         drawBase(t);
-        if (t > scene.growEnd + 600) {
-          drawBase(Infinity);
-          grown = true;
-        }
+        if (t >= scene.connectAt) connect();
+        if (t > scene.growEnd + 100) finishGrowth();
       }
-      if (t > GROW_DELAY + 900) spawn(now);
-      drawPulses(dt);
+      if (live && (grown || t > GROW_DELAY + 900)) spawn(now);
+      if (live) drawPulses(dt);
     };
 
     setup();
-    if (!reduce) raf = requestAnimationFrame(frame);
+    const loop = live || (grow && !reduce);
+    if (loop) raf = requestAnimationFrame(frame);
 
     let resizeTimer = 0;
     const onResize = () => {
       clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => {
-        setup();
-        if (!reduce) {
-          grown = true;
-          drawBase(Infinity);
-        }
-      }, 150);
+      resizeTimer = window.setTimeout(setup, 150);
     };
+    const ro = new ResizeObserver(onResize);
+    ro.observe(root);
+    if (targetRef.current) ro.observe(targetRef.current);
     const onMove = (e: PointerEvent) => {
       const r = root.getBoundingClientRect();
       pointer.x = e.clientX - r.left;
       pointer.y = e.clientY - r.top;
     };
     const onVisibility = () => {
+      if (!loop) return;
       if (document.hidden) cancelAnimationFrame(raf);
-      else if (!reduce) {
+      else {
         last = performance.now();
         raf = requestAnimationFrame(frame);
       }
     };
-    window.addEventListener('resize', onResize);
     window.addEventListener('pointermove', onMove);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(resizeTimer);
-      window.removeEventListener('resize', onResize);
+      ro.disconnect();
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [rootRef, doorRef]);
+  }, [rootRef, targetRef, variant, grow, animated]);
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">

@@ -9,7 +9,7 @@ import {
   useTransform,
 } from 'framer-motion';
 import Hero from './Hero';
-import NeuronField from './NeuronField';
+import NeuronField, { type Blocked } from './NeuronField';
 import { useFloatingWords } from '../lib/useFloatingWords';
 
 type Phase = 'idle' | 'opening';
@@ -75,6 +75,12 @@ interface Props {
 export default function DoorIntro({ onReveal, onDone }: Props) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [hover, setHover] = useState(false);
+  // La porte reste close tant que les axones des neurones ne l'ont pas tous rejointe ;
+  // elle s'entrouvre alors, et l'invitation à cliquer apparaît.
+  const [connected, setConnected] = useState(false);
+  const [fastForward, setFastForward] = useState(false);
+  const blockedRef = useRef<Blocked | null>(null);
+  const [fibersVersion, setFibersVersion] = useState(0);
   const reduce = useReducedMotion();
 
   const door = useAnimationControls();
@@ -90,7 +96,17 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
   const { wordRefs, positions } = useFloatingWords(rootRef, [frameRef, promptRef], WORDS, {
     margin: 22,
     gap: 14,
+    blockedRef,
+    version: fibersVersion,
   });
+
+  const AJAR = -20; // degrés : la porte entrouverte
+  useEffect(() => {
+    if (!connected || phase !== 'idle') return;
+    door.start({ rotateY: AJAR, transition: { duration: 1.4, ease: [0.22, 1, 0.36, 1] } });
+    ui.start({ opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.5, ease: 'easeOut' } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected]);
   const doorwayRef = useRef<HTMLDivElement>(null);
   const zoomAnim = useRef<Animation | null>(null);
   const [k0, setK0] = useState(0.15);
@@ -166,6 +182,11 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
   const open = async () => {
     if (phase === 'opening') {
       zoomAnim.current?.finish();
+      return;
+    }
+    // Pas encore connectée : un clic accélère la connexion, la porte s'entrouvre et attend un second clic.
+    if (!connected) {
+      setFastForward(true);
       return;
     }
     setPhase('opening');
@@ -259,7 +280,18 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
         animate={{ opacity: phase === 'idle' ? 1 : 0 }}
         transition={{ duration: 0.5 }}
       >
-        <NeuronField rootRef={rootRef} doorRef={frameRef} active={phase === 'idle'} />
+        <NeuronField
+          rootRef={rootRef}
+          targetRef={frameRef}
+          variant="door"
+          active={phase === 'idle'}
+          fastForward={fastForward}
+          onConnected={() => setConnected(true)}
+          onOccupancy={(blocked) => {
+            blockedRef.current = blocked;
+            setFibersVersion((v) => v + 1);
+          }}
+        />
       </motion.div>
 
       {/* Mots flottants (comme le Hero) */}
@@ -375,6 +407,14 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
                 className="pointer-events-none absolute inset-0 rounded-t-[999px]"
                 style={{ boxShadow: 'inset 0 0 28px rgba(31,131,207,0.45)' }}
               />
+              {/* Lumière qui filtre par l'entrebâillement une fois la porte connectée */}
+              <motion.div
+                className="pointer-events-none absolute inset-y-0 right-0 w-1/3 rounded-tr-[999px]"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(103,232,249,0.28) 70%, rgba(207,250,254,0.55))' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: connected && phase === 'idle' ? [0.75, 1, 0.75] : 0 }}
+                transition={connected && phase === 'idle' ? { duration: 2.6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.4 }}
+              />
             </div>
 
             {/* Porte (charnière à gauche) */}
@@ -391,14 +431,14 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
                   aria-label="Ouvrir la porte et entrer sur le site"
                   onClick={open}
                   onHoverStart={() => {
-                    if (phase !== 'idle') return;
+                    if (phase !== 'idle' || !connected) return;
                     setHover(true);
-                    door.start({ rotateY: -16, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } });
+                    door.start({ rotateY: AJAR - 10, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } });
                   }}
                   onHoverEnd={() => {
-                    if (phase !== 'idle') return;
+                    if (phase !== 'idle' || !connected) return;
                     setHover(false);
-                    door.start({ rotateY: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } });
+                    door.start({ rotateY: AJAR, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } });
                   }}
                   onFocus={() => phase === 'idle' && setHover(true)}
                   onBlur={() => setHover(false)}
@@ -522,10 +562,27 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
         </div>
       </motion.div>
 
+      {/* Avant la connexion : les neurones cherchent la porte */}
+      <AnimatePresence>
+        {!connected && (
+          <motion.p
+            key="connecting"
+            className="pointer-events-none absolute bottom-[5vh] left-0 right-0 z-20 text-center font-mono text-xs tracking-[0.3em] text-cyan-200/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.35, 0.8, 0.35] }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            Connexion…
+          </motion.p>
+        )}
+      </AnimatePresence>
+
       {/* Invitation */}
       <motion.div
         ref={promptRef}
         animate={ui}
+        initial={{ opacity: 0, y: 10 }}
         className="absolute bottom-[3vh] left-0 right-0 z-20 flex flex-col items-center gap-2 px-6 text-center"
       >
         <p className="rounded-lg border border-blue-500/30 bg-zinc-900/80 px-5 py-2.5 text-sm sm:text-base font-medium text-white backdrop-blur-sm">

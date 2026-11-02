@@ -1,4 +1,4 @@
-import { RefObject, useLayoutEffect, useRef, useState } from 'react';
+import { MutableRefObject, RefObject, useLayoutEffect, useRef, useState } from 'react';
 
 /**
  * Placement des mots flottants : chaque mot garde sa position préférée (en %)
@@ -26,6 +26,10 @@ interface Options {
   gap?: number;
   /** Marge par rapport aux bords de l'écran, en px. */
   edge?: number;
+  /** Zones dessinées à éviter aussi (ex. fibres des neurones) : renvoie true si la boîte les touche. */
+  blockedRef?: MutableRefObject<((b: Box) => boolean) | null>;
+  /** À incrémenter quand ces zones changent, pour replacer les mots. */
+  version?: number;
 }
 
 type Box = { x: number; y: number; w: number; h: number };
@@ -51,7 +55,7 @@ export function useFloatingWords(
   rootRef: RefObject<HTMLElement>,
   obstacleRefs: RefObject<HTMLElement>[],
   words: FloatingWord[],
-  { top = 0, margin = 16, gap = 10, edge = 12 }: Options = {}
+  { top = 0, margin = 16, gap = 10, edge = 12, blockedRef, version = 0 }: Options = {}
 ) {
   const wordRefs = useRef<(HTMLElement | null)[]>([]);
   const [positions, setPositions] = useState<({ left: number; top: number } | null)[]>(() => words.map(() => null));
@@ -92,11 +96,16 @@ export function useFloatingWords(
         const px = Math.min(maxX, Math.max(minX, (word.x / 100) * W - w / 2));
         const py = Math.min(maxY, Math.max(minY, (word.y / 100) * H - h / 2));
 
-        const free = (b: Box, avoidWords: boolean) =>
-          !obstacles.some((o) => overlaps(b, o, 0)) && (!avoidWords || !placed.some((p) => overlaps(b, p, wordGap)));
+        // Les fibres sont vérifiées avec une petite marge (le mot flotte de quelques px).
+        const onFibers = (b: Box) => !!blockedRef?.current?.({ x: b.x - 6, y: b.y - 10, w: b.w + 12, h: b.h + 16 });
+        const free = (b: Box, strict: number) =>
+          !obstacles.some((o) => overlaps(b, o, 0)) &&
+          (strict < 2 || !onFibers(b)) &&
+          (strict < 1 || !placed.some((p) => overlaps(b, p, wordGap)));
 
+        // Du plus exigeant au plus souple : d'abord loin des fibres et des autres mots.
         let best: Box | null = null;
-        for (const avoidWords of [true, false]) {
+        for (const avoidWords of [2, 1, 0]) {
           let bestDist = Infinity;
           const tryAt = (x: number, y: number) => {
             const b = { x, y, w, h };
@@ -136,7 +145,7 @@ export function useFloatingWords(
       window.removeEventListener('resize', layout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [version]);
 
   return { wordRefs, positions };
 }

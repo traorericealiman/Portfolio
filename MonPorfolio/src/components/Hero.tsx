@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Github, Linkedin, Mail } from 'lucide-react';
 import { useFloatingWords } from '../lib/useFloatingWords';
+import NeuronField, { type Blocked } from './NeuronField';
 
 /** `preview` : version figée (miniature de l'intro) — aucune animation ni interaction. */
 export default function Hero({ preview = false }: { preview?: boolean }) {
@@ -25,10 +26,14 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
   // derrière le terminal ou la barre de menu, quelle que soit la taille d'écran.
   const rootRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const blockedRef = useRef<Blocked | null>(null);
+  const [fibersVersion, setFibersVersion] = useState(0);
   const { wordRefs, positions } = useFloatingWords(rootRef, [terminalRef], floatingWords, {
     top: 96, // barre de menu (84 px) + flottement des mots (10 px)
     margin: 14,
     gap: 12,
+    blockedRef,
+    version: fibersVersion,
   });
 
   useEffect(() => {
@@ -80,6 +85,20 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
       {/* Background Gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"></div>
       
+      {/* Les neurones de la porte continuent ici : leurs axones aboutissent au terminal */}
+      <NeuronField
+        rootRef={rootRef}
+        targetRef={terminalRef}
+        variant="hero"
+        grow={false}
+        animated={!preview}
+        active={!preview}
+        onOccupancy={(blocked) => {
+          blockedRef.current = blocked;
+          setFibersVersion((v) => v + 1);
+        }}
+      />
+
       {/* Moving background glow - disabled on mobile for performance */}
       <div 
         className="absolute inset-0 opacity-30 transition-transform duration-700 ease-out pointer-events-none hidden md:block"
