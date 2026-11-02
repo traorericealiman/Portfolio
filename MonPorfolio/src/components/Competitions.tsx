@@ -83,16 +83,21 @@ export default function Competitions() {
             >
               {/* --- PETIT CADRE PHOTO --- */}
               <div className="relative mb-5 rounded-xl overflow-hidden border border-zinc-100 aspect-[16/10] bg-zinc-50 flex items-center justify-center">
-                <img
-                  src={comp.image}
-                  alt={comp.title}
-                  loading="lazy"
-                  draggable={false}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                {/* L'image arrive après le texte : on ne l'affiche qu'une fois là (la clé recrée
+                    l'élément si elle change, une ancienne erreur ne la masque donc pas). */}
+                {comp.image && (
+                  <img
+                    key={comp.image.length}
+                    src={comp.image}
+                    alt={comp.title}
+                    loading="lazy"
+                    draggable={false}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
               </div>
 
               <div className="flex items-center justify-between gap-2 mb-4">
