@@ -3,12 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Eye, EyeOff, ShieldCheck, ArrowRight, ArrowLeft, UserCircle2 } from 'lucide-react';
 import { useContent } from '../lib/contentStore';
 import { loginAdmin } from '../services/authService';
-import { setAdminKey } from '../services/tokenStorage';
 
-// Les identifiants saisis ici sont vérifiés auprès du serveur, contre le
-// compte stocké (haché) dans la table admin_users de Supabase  ce n'est
-// plus un code en dur côté client : sans le bon mot de passe, aucune
-// écriture n'est acceptée par l'API, même en contournant cet écran.
+// Connexion avec le compte admin de Supabase (email + mot de passe). Même en
+// contournant cet écran, les règles d'accès de la base refusent toute écriture
+// à qui n'est pas connecté avec ce compte.
 export const SESSION_KEY = 'portfolio_admin_unlocked';
 
 export default function Lockscreen({ onUnlock }: { onUnlock: () => void }) {
@@ -25,8 +23,7 @@ export default function Lockscreen({ onUnlock }: { onUnlock: () => void }) {
     setLoading(true);
     setError(null);
     try {
-      const token = await loginAdmin(username, password);
-      setAdminKey(token);
+      await loginAdmin(username, password);
       sessionStorage.setItem(SESSION_KEY, '1');
       onUnlock();
     } catch (err) {
@@ -139,11 +136,11 @@ export default function Lockscreen({ onUnlock }: { onUnlock: () => void }) {
             Bienvenue de retour
           </h2>
           <p className="text-zinc-500 text-sm mb-8">
-            Entre ton nom d'utilisateur et ton mot de passe pour continuer.
+            Entre ton email et ton mot de passe pour continuer.
           </p>
 
           <label className="block text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">
-            Nom d'utilisateur
+            Email
           </label>
           <div
             className={`relative rounded-xl border transition-colors mb-4 ${
@@ -152,7 +149,8 @@ export default function Lockscreen({ onUnlock }: { onUnlock: () => void }) {
           >
             <UserCircle2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
             <input
-              type="text"
+              type="email"
+              inputMode="email"
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);
@@ -160,7 +158,7 @@ export default function Lockscreen({ onUnlock }: { onUnlock: () => void }) {
               }}
               autoFocus
               autoComplete="username"
-              placeholder="ton.identifiant"
+              placeholder="toi@exemple.com"
               className="w-full bg-transparent pl-11 pr-4 py-3.5 text-white placeholder-zinc-600 focus:outline-none text-sm tracking-wide"
             />
           </div>

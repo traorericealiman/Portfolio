@@ -3,6 +3,7 @@ import {
   createListItem as createListItemApi,
   deleteListItem as deleteListItemApi,
   fetchAllContent,
+  loadImage,
   updateListItem as updateListItemApi,
   updateProfile as updateProfileApi,
 } from '../services';
@@ -90,8 +91,8 @@ const CHANGE_EVENT = 'portfolio_content_change';
 
 // Copie du dernier contenu reçu, gardée dans le navigateur : dès la 2e visite, le
 // site s'affiche aussitôt avec ces données, puis se met à jour en arrière-plan.
-// (Le contenu ne contient plus les images, seulement leurs URL : il pèse quelques Ko.)
-const STORAGE_KEY = 'portfolio_content_v1';
+// (Seulement le texte : les images ont leur propre cache, voir loadImage.)
+const STORAGE_KEY = 'portfolio_content_v2';
 const MAX_STORED_CHARS = 300_000;
 
 function readStored(): SiteContent | null {
@@ -103,9 +104,20 @@ function readStored(): SiteContent | null {
   }
 }
 
+const LIST_KEYS: ListResource[] = ['competitions', 'creations', 'projects'];
+
+function withoutImages(c: SiteContent): SiteContent {
+  return {
+    profile: { ...c.profile, photoUrl: '' },
+    competitions: c.competitions.map((it) => ({ ...it, image: '' })),
+    creations: c.creations.map((it) => ({ ...it, image: '' })),
+    projects: c.projects.map((it) => ({ ...it, image: '' })),
+  };
+}
+
 function store(content: SiteContent) {
   try {
-    const raw = JSON.stringify(content);
+    const raw = JSON.stringify(withoutImages(content));
     if (raw.length <= MAX_STORED_CHARS) localStorage.setItem(STORAGE_KEY, raw);
     else localStorage.removeItem(STORAGE_KEY);
   } catch {
@@ -126,14 +138,73 @@ export function getContent(): SiteContent {
   return cache;
 }
 
+// --- Images : chargées une par une après le texte -------------------------------
+
+let notifyTimer = 0;
+function scheduleNotify() {
+  if (notifyTimer) return;
+  notifyTimer = window.setTimeout(() => {
+    notifyTimer = 0;
+    notifyChange();
+  }, 60);
+}
+
+let imagesRun = 0;
+function loadImages() {
+  const run = ++imagesRun;
+  if (cache.profile.photoHash && !cache.profile.photoUrl) {
+    loadImage('profile', 1, cache.profile.photoHash)
+      .then((img) => {
+        if (run !== imagesRun || !img) return;
+        cache = { ...cache, profile: { ...cache.profile, photoUrl: img } };
+        scheduleNotify();
+      })
+      .catch((err) => console.error('Photo de profil :', err));
+  }
+  for (const resource of LIST_KEYS) {
+    for (const item of cache[resource] as { id: string; image: string; imageHash?: string }[]) {
+      if (!item.imageHash || item.image) continue;
+      loadImage(resource, item.id, item.imageHash)
+        .then((img) => {
+          if (run !== imagesRun || !img) return;
+          cache = {
+            ...cache,
+            [resource]: (cache[resource] as { id: string }[]).map((it) => (it.id === item.id ? { ...it, image: img } : it)),
+          } as SiteContent;
+          scheduleNotify();
+        })
+        .catch((err) => console.error(`Image ${resource}/${item.id} :`, err));
+    }
+  }
+}
+
+/** Garde les images déjà chargées quand leur empreinte n'a pas changé. */
+function keepLoadedImages(next: SiteContent): SiteContent {
+  const reuse = <T extends { id: string; image: string; imageHash?: string }>(list: T[], prev: T[]) =>
+    list.map((it) => {
+      const old = prev.find((p) => p.id === it.id);
+      return old && old.image && old.imageHash === it.imageHash ? { ...it, image: old.image } : it;
+    });
+  return {
+    profile:
+      cache.profile.photoUrl && cache.profile.photoHash === next.profile.photoHash
+        ? { ...next.profile, photoUrl: cache.profile.photoUrl }
+        : next.profile,
+    competitions: reuse(next.competitions, cache.competitions),
+    creations: reuse(next.creations, cache.creations),
+    projects: reuse(next.projects, cache.projects),
+  };
+}
+
 async function loadContent(): Promise<SiteContent> {
   if (fetchPromise) return fetchPromise;
   fetchPromise = fetchAllContent()
     .then((data) => {
-      cache = sanitizeContent(data);
+      cache = keepLoadedImages(sanitizeContent(data));
       hasLoaded = true;
       store(cache);
       notifyChange();
+      loadImages();
       return cache;
     })
     .catch((err) => {
@@ -145,6 +216,9 @@ async function loadContent(): Promise<SiteContent> {
     });
   return fetchPromise;
 }
+
+// Contenu gardé de la visite précédente : ses images se chargent tout de suite (souvent depuis le cache).
+loadImages();
 
 // Le chargement démarre dès que le script s'exécute, en parallèle de l'animation
 // de la porte, au lieu d'attendre le montage des composants.

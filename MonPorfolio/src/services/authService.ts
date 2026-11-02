@@ -1,40 +1,34 @@
-import { apiFetch } from './httpClient';
+import { supabase } from './supabaseClient';
 
-/** Connexion username + mot de passe. Renvoie le jeton de session à stocker, ou lève une erreur. */
-export async function loginAdmin(username: string, password: string): Promise<string> {
-  const body = await apiFetch<{ token: string }>('/admin/login', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  });
-  return body.token;
-}
-
-/** Crée le tout premier compte admin (ne fonctionne que si aucun compte n'existe encore). */
-export async function registerAdmin(username: string, password: string): Promise<string> {
-  const body = await apiFetch<{ token: string }>('/admin/register', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  });
-  return body.token;
-}
-
-/** Vérifie que le jeton actuellement stocké est toujours valide (ex: au rechargement de la page). */
-export async function verifyAdminSession(): Promise<boolean> {
-  try {
-    await apiFetch('/admin/verify');
-    return true;
-  } catch {
-    return false;
+/**
+ * Connexion admin avec le système de comptes de Supabase (email + mot de passe).
+ * Le compte se crée une fois dans Supabase > Authentication > Users.
+ * Renvoie le jeton de session (géré ensuite automatiquement par Supabase).
+ */
+export async function loginAdmin(email: string, password: string): Promise<string> {
+  const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+  if (error || !data.session) throw new Error('Email ou mot de passe incorrect.');
+  const { data: isAdmin } = await supabase.rpc('is_admin');
+  if (!isAdmin) {
+    await supabase.auth.signOut();
+    throw new Error("Ce compte n'a pas les droits d'administration.");
   }
+  return data.session.access_token;
 }
 
-export async function changeAdminPassword(
-  username: string,
-  currentPassword: string,
-  newPassword: string
-): Promise<void> {
-  await apiFetch('/admin/change-password', {
-    method: 'POST',
-    body: JSON.stringify({ username, currentPassword, newPassword }),
-  });
+/** Vérifie qu'une session admin est toujours ouverte (ex: au rechargement de la page). */
+export async function verifyAdminSession(): Promise<boolean> {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return false;
+  const { data: isAdmin } = await supabase.rpc('is_admin');
+  return !!isAdmin;
+}
+
+export async function logoutAdmin(): Promise<void> {
+  await supabase.auth.signOut();
+}
+
+export async function changeAdminPassword(newPassword: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw new Error(error.message);
 }

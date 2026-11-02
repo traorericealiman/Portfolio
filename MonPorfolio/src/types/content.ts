@@ -6,6 +6,8 @@ export interface Profile {
   github: string;
   linkedin: string;
   facebook: string;
+  /** Empreinte de la photo (sert au cache du navigateur). */
+  photoHash?: string;
 }
 
 export interface Competition {
@@ -15,6 +17,8 @@ export interface Competition {
   result: string;
   description: string;
   image: string;
+  /** Empreinte de l'image (sert au cache du navigateur). */
+  imageHash?: string;
   /** Mois de la compétition, "AAAA-MM" (vide si inconnu). */
   date?: string;
 }
@@ -25,6 +29,8 @@ export interface Creation {
   category: string;
   color: string;
   image: string;
+  /** Empreinte de l'image (sert au cache du navigateur). */
+  imageHash?: string;
 }
 
 export interface Project {
@@ -41,6 +47,8 @@ export interface Project {
   github: string;
   link: string;
   image: string;
+  /** Empreinte de l'image (sert au cache du navigateur). */
+  imageHash?: string;
 }
 
 export interface SiteContent {

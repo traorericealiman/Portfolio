@@ -1,4 +1,0 @@
-# La fonction gère elle-même son authentification (jeton admin dans X-Admin-Key),
-# et le site public l'appelle sans jeton Supabase.
-[functions.api]
-verify_jwt = false

@@ -1,33 +1,32 @@
-# Backend Supabase (Edge Function `api`)
+# Supabase
 
-Remplace l'ancien backend Flask : une seule fonction, mêmes routes (`/content`, `/profile`,
-`/competitions`, `/creations`, `/projects`, `/stats`, `/admin/*`).
+Le site parle **directement** à Supabase (bibliothèque `@supabase/supabase-js`), sans serveur
+intermédiaire. Rien n'est à déployer côté Supabase quand on modifie le site.
 
-## Déploiement
+## Mise en place (une seule fois)
 
-```bash
-supabase link --project-ref <ref>
-supabase db push                                  # applique supabase/migrations
-supabase secrets set ADMIN_TOKEN_SECRET=<chaine-aleatoire-de-32-caracteres-minimum>
-supabase secrets set ALLOWED_ORIGINS=https://ton-site.vercel.app,http://localhost:3000
-supabase functions deploy api --no-verify-jwt
-```
+1. **Règles d'accès** : copier le contenu de `connexion-directe.sql` dans
+   Supabase > SQL Editor > New query, puis « Run ».
+   - tout le monde peut lire le contenu du site ;
+   - seul le compte admin peut le modifier ;
+   - les visiteurs peuvent seulement incrémenter les compteurs de visite.
+2. **Compte admin** : Supabase > Authentication > Users > Add user > Create new user,
+   avec l'email indiqué dans `connexion-directe.sql` (traorericealiman@gmail.com),
+   un mot de passe, et « Auto Confirm User » coché.
+3. (Conseillé) Authentication > Sign In / Providers > Email : désactiver
+   « Allow new users to sign up », pour que personne d'autre ne puisse créer de compte.
 
-## Sécurité
-
-- Plus aucune table ni fonction SQL n'est accessible avec la clé publique (anon) : tout passe par la fonction.
-- `/admin/login` : 10 échecs par compte (ou 20 par IP) en 15 minutes bloquent la connexion pendant 15 minutes.
-- Les sessions admin durent 7 jours et sont invalidées dès que le mot de passe change.
-- `/admin/register` est désactivé. Pour recréer un premier compte sur une base vide :
-  `supabase secrets set ALLOW_ADMIN_REGISTER=true`, crée le compte, puis `supabase secrets unset ALLOW_ADMIN_REGISTER`.
-- `/stats` (lecture) est réservé à l'admin ; seul `/stats/increment` reste public.
-
-## Frontend
-
-Dans `MonPorfolio/.env` (et dans les variables Vercel) :
+## Variables du site (`MonPorfolio/.env` et Vercel)
 
 ```
-VITE_API_URL=https://<ref>.supabase.co/functions/v1/api
+VITE_SUPABASE_URL=https://<ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Les comptes admin existants (hashes Werkzeug) restent valides ; ils sont migrés au premier login.
+La clé « publishable » est faite pour être visible dans le navigateur : ce sont les règles
+d'accès de la base qui protègent les données.
+
+## Et si on change la structure d'une table ?
+
+C'est rare (ex. ajouter une colonne). Dans ce cas, coller le petit script SQL fourni dans
+le SQL Editor, comme à l'étape 1. Le dossier `migrations/` garde l'historique des changements passés.

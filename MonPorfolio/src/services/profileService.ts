@@ -1,9 +1,9 @@
-import { apiFetch } from './httpClient';
+import { supabase, fail } from './supabaseClient';
+import { profileFromRow, profileToRow } from './contentService';
 import type { Profile } from '../types/content';
 
 export async function updateProfile(profile: Profile): Promise<Profile> {
-  return apiFetch<Profile>('/profile', {
-    method: 'PUT',
-    body: JSON.stringify(profile),
-  });
+  const { data, error } = await supabase.from('profile').upsert(profileToRow(profile)).select('*').single();
+  if (error) fail(error, 'Enregistrement du profil impossible');
+  return profileFromRow(data);
 }

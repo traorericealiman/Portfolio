@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   User,
@@ -10,7 +10,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import Lockscreen, { SESSION_KEY } from './Lockscreen';
-import { clearAdminKey } from '../services/tokenStorage';
+import { logoutAdmin, verifyAdminSession } from '../services/authService';
 import ProfileTab from './tabs/ProfileTab';
 import CompetitionsTab from './tabs/CompetitionsTab';
 import CreationsTab from './tabs/CreationsTab';
@@ -30,6 +30,17 @@ const TABS = [
 export default function AdminApp() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(SESSION_KEY) === '1');
   const [activeTab, setActiveTab] = useState('stats');
+
+  // Session Supabase expirée ou fermée ailleurs : on revient à l'écran de connexion.
+  useEffect(() => {
+    if (!unlocked) return;
+    verifyAdminSession().then((ok) => {
+      if (!ok) {
+        sessionStorage.removeItem(SESSION_KEY);
+        setUnlocked(false);
+      }
+    });
+  }, [unlocked]);
 
   if (!unlocked) {
     return <Lockscreen onUnlock={() => setUnlocked(true)} />;
@@ -80,7 +91,7 @@ export default function AdminApp() {
           <button
             onClick={() => {
               sessionStorage.removeItem(SESSION_KEY);
-              clearAdminKey();
+              logoutAdmin();
               setUnlocked(false);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
