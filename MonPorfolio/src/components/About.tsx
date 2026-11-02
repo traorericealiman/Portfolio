@@ -192,17 +192,32 @@ export default function About() {
           </motion.h3>
 
           <div className="relative grid gap-10 md:grid-cols-3 md:gap-8">
-            {/* ligne horizontale (desktop) */}
-            <div className="absolute left-[11px] right-0 top-[11px] hidden h-px bg-zinc-200 md:block" />
-            <motion.div
-              className="absolute left-[11px] top-[11px] hidden h-px bg-emerald-500 md:block"
-              initial={{ width: 0 }}
-              whileInView={{ width: 'calc(66.6% + 4px)' }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
-            />
-            {/* ligne verticale (mobile) */}
-            <div className="absolute bottom-3 left-[11px] top-3 w-px bg-zinc-200 md:hidden" />
+            {/* Fil électrique (desktop) : double piste, le courant circule dans la partie déjà parcourue */}
+            <div className="absolute left-[11px] right-0 top-[9px] hidden h-[5px] md:block" aria-hidden>
+              <span className="absolute inset-x-0 top-0 h-px bg-zinc-200" />
+              <span className="absolute inset-x-0 bottom-0 h-px bg-zinc-200" />
+              <motion.div
+                className="absolute inset-y-0 left-0 overflow-hidden"
+                initial={{ width: 0 }}
+                whileInView={{ width: 'calc(66.6% + 4px)' }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <span className="absolute inset-x-0 top-0 h-px bg-emerald-500" />
+                <span className="absolute inset-x-0 bottom-0 h-px bg-emerald-500" />
+                <span className="wire-current wire-current-x" />
+                <span className="wire-current wire-current-x" style={{ animationDelay: '1.2s' }} />
+              </motion.div>
+            </div>
+            {/* Fil électrique (mobile) : même principe, le courant descend */}
+            <div className="absolute bottom-3 left-[9px] top-3 w-[5px] md:hidden" aria-hidden>
+              <span className="absolute inset-y-0 left-0 w-px bg-emerald-500" />
+              <span className="absolute inset-y-0 right-0 w-px bg-emerald-500" />
+              <div className="absolute inset-0 overflow-hidden">
+                <span className="wire-current wire-current-y" />
+                <span className="wire-current wire-current-y" style={{ animationDelay: '1.2s' }} />
+              </div>
+            </div>
 
             {PARCOURS.map((step, i) => (
               <motion.div

@@ -131,3 +131,35 @@ html {
     height: 100svh;
   }
 }
+
+/* Parcours : courant électrique qui circule dans le fil */
+.wire-current {
+  position: absolute;
+  border-radius: 9999px;
+  box-shadow: 0 0 10px 2px rgba(16, 185, 129, 0.85), 0 0 3px rgba(5, 150, 105, 0.9);
+}
+.wire-current-x {
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  left: -60px;
+  background: linear-gradient(90deg, transparent, #10b981 55%, #34d399 85%, #a7f3d0);
+  animation: wire-x 2.4s linear infinite;
+}
+.wire-current-y {
+  left: 0;
+  right: 0;
+  height: 56px;
+  top: -60px;
+  background: linear-gradient(180deg, transparent, #10b981 55%, #34d399 85%, #a7f3d0);
+  animation: wire-y 2.4s linear infinite;
+}
+@keyframes wire-x {
+  to { left: 100%; }
+}
+@keyframes wire-y {
+  to { top: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wire-current { display: none; }
+}
