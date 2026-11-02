@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Github, Linkedin, Mail } from 'lucide-react';
+import { useFloatingWords } from '../lib/useFloatingWords';
 
 /** `preview` : version figée (miniature de l'intro) — aucune animation ni interaction. */
 export default function Hero({ preview = false }: { preview?: boolean }) {
@@ -10,27 +11,25 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
   const fullText = 'Bienvenue sur le portfolio de TRAORE RICE-ALIMAN';
   
   const floatingWords = [
-    { text: 'Innovation', x: 7, y: 15, delay: 0 },
-    { text: 'Créativité', x: 85, y: 20, delay: 0.5 },
-    { text: 'Passion', x: 80, y: 70, delay: 1.5 },
-    { text: 'Design', x: 15, y: 45, delay: 2 },
-    { text: 'Code', x: 75, y: 50, delay: 2.5 },
-    { text: 'Performance', x: 10, y: 85, delay: 3 },
-    { text: 'Vision', x: 90, y: 40, delay: 3.5 },
-    { text: 'UX/UI', x: 12, y: 25, delay: 1 },
-    { text: 'React', x: 70, y: 15, delay: 1.8 },
-    { text: 'Next.js', x: 20, y: 65, delay: 2.2 },
-    { text: 'Tailwind', x: 85, y: 55, delay: 2.8 },
-    { text: 'TypeScript', x: 10, y: 55, delay: 0.8 },
-    { text: 'Frontend', x: 60, y: 30, delay: 1.3 },
-    { text: 'Animation', x: 40, y: 80, delay: 2.7 },
-    { text: 'Responsive', x: 50, y: 10, delay: 0.3 },
-    { text: 'Modern', x: 30, y: 90, delay: 3.2 },
-    { text: 'Elegant', x: 65, y: 75, delay: 1.7 },
-    { text: 'Web', x: 45, y: 35, delay: 0.6 },
-    { text: 'Digital', x: 25, y: 20, delay: 2.4 },
-    { text: 'Interface', x: 55, y: 60, delay: 3.1 }
+    { text: 'Deep Learning', x: 14, y: 18, delay: 0 },
+    { text: 'Design', x: 84, y: 20, delay: 0.5 },
+    { text: 'Machine Learning', x: 18, y: 84, delay: 1.5 },
+    { text: 'UX/UI', x: 10, y: 50, delay: 2 },
+    { text: 'Data', x: 88, y: 52, delay: 2.5 },
+    { text: 'Intelligence Artificielle', x: 50, y: 13, delay: 1 },
+    { text: 'Python', x: 82, y: 84, delay: 3 },
+    { text: 'Créativité', x: 50, y: 91, delay: 1.8 },
   ];
+
+  // Les mots restent entiers et visibles : jamais coupés par les bords ni cachés
+  // derrière le terminal ou la barre de menu, quelle que soit la taille d'écran.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const { wordRefs, positions } = useFloatingWords(rootRef, [terminalRef], floatingWords, {
+    top: 96, // barre de menu (84 px) + flottement des mots (10 px)
+    margin: 14,
+    gap: 12,
+  });
 
   useEffect(() => {
     if (preview) return;
@@ -77,7 +76,7 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
   }, [preview]);
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 overflow-hidden">
+    <div ref={rootRef} className="relative min-h-screen bg-zinc-950 overflow-hidden">
       {/* Background Gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"></div>
       
@@ -91,17 +90,21 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
       />
 
       {/* Floating Background Words */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div
+        className="absolute inset-0 overflow-hidden pointer-events-none z-0"
+        style={{ transform: `translate(${mousePos.x * 0.3}px, ${mousePos.y * 0.3}px)` }}
+      >
         {floatingWords.map((word, i) => (
           <div
             key={i}
-            className="absolute text-blue-400/20 sm:text-blue-400/25 md:text-blue-400/20 lg:text-blue-400/15 font-black text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl whitespace-nowrap"
+            ref={(el) => (wordRefs.current[i] = el)}
+            className="absolute text-blue-400/20 sm:text-blue-400/25 md:text-blue-400/20 lg:text-blue-400/15 font-black text-sm max-[359px]:text-[11px] sm:text-lg md:text-xl lg:text-2xl xl:text-3xl whitespace-nowrap"
             style={{
-              left: `${word.x}%`,
-              top: `${word.y}%`,
+              left: positions[i]?.left ?? 0,
+              top: positions[i]?.top ?? 0,
+              visibility: positions[i] ? 'visible' : 'hidden',
               animation: `float ${3 + (i % 3)}s ease-in-out infinite`,
               animationDelay: `${word.delay}s`,
-              transform: `translate(-50%, -50%) translate(${mousePos.x * 0.3}px, ${mousePos.y * 0.3}px)`
             }}
           >
             {word.text}
@@ -113,10 +116,10 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
       <style>{`
         @keyframes float {
           0%, 100% {
-            transform: translate(-50%, -50%) translateY(0px);
+            transform: translateY(0px);
           }
           50% {
-            transform: translate(-50%, -50%) translateY(-20px);
+            transform: translateY(-10px);
           }
         }
       `}</style>
@@ -127,7 +130,7 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
           <div className="max-w-6xl w-full">
 
             {/* Terminal Window */}
-            <div className="bg-zinc-900/90 backdrop-blur-sm rounded-lg border border-zinc-800 shadow-2xl overflow-hidden mb-8 sm:mb-12 max-w-5xl mx-auto relative">
+            <div ref={terminalRef} className="bg-zinc-900/90 backdrop-blur-sm rounded-lg border border-zinc-800 shadow-2xl overflow-hidden mb-8 sm:mb-12 max-w-5xl mx-auto relative">
               {/* Terminal Header */}
               <div className="bg-zinc-800/50 px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 border-b border-zinc-700/50">
                 <div className="flex gap-1.5 sm:gap-2">
@@ -152,9 +155,16 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
                   <span className="text-blue-400 text-sm sm:text-base lg:text-lg">$</span>
                   <span className="text-zinc-500 text-sm sm:text-base lg:text-lg">cat welcome.txt</span>
                 </div>
-                <div className="text-white text-base sm:text-xl md:text-2xl lg:text-3xl font-light ml-4 leading-relaxed min-h-[1.5em] break-words">
-                  {text}
-                  <span className={`${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity text-blue-400 ml-1`}>|</span>
+                {/* Le texte complet, invisible, réserve la place : le terminal ne change pas de taille pendant la frappe. */}
+                <div className="grid text-white text-base sm:text-xl md:text-2xl lg:text-3xl font-light ml-4 leading-relaxed min-h-[1.5em] break-words">
+                  <span aria-hidden className="invisible col-start-1 row-start-1">
+                    {fullText}
+                    <span className="ml-1">|</span>
+                  </span>
+                  <span className="col-start-1 row-start-1">
+                    {text}
+                    <span className={`${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity text-blue-400 ml-1`}>|</span>
+                  </span>
                 </div>
               </div>
             </div>

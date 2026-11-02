@@ -116,3 +116,18 @@
   .door-pulse { display: none; }
   .door-node { animation: none; }
 }
+
+/* iOS / mobiles : 100vh inclut la barre d'adresse, ce qui décale l'accueil.
+   On utilise la hauteur réellement visible (svh) quand le navigateur la connaît. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@supports (height: 1svh) {
+  .min-h-screen {
+    min-height: 100svh;
+  }
+  .h-screen {
+    height: 100svh;
+  }
+}

@@ -18,6 +18,7 @@ export default function FloatingWhatsApp() {
       transition={{ delay: 1, type: 'spring', stiffness: 200, damping: 15 }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
+      style={{ marginBottom: 'env(safe-area-inset-bottom)', marginRight: 'env(safe-area-inset-right)' }}
       className="fixed bottom-5 right-5 sm:bottom-8 sm:right-8 z-[90] w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#25D366] shadow-lg shadow-black/20 flex items-center justify-center hover:shadow-xl transition-shadow"
     >
       <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-40" />

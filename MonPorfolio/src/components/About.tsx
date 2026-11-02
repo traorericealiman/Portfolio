@@ -211,7 +211,7 @@ export default function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.7, delay: 0.1 + i * 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className="relative pl-10 md:pl-0 md:pt-12"
+                className="relative min-w-0 pl-10 md:pl-0 md:pt-12"
               >
                 {/* repère */}
                 {step.current ? (
@@ -237,20 +237,20 @@ export default function About() {
                     </span>
                   )}
                 </p>
-                <div className="mb-4 flex h-14 items-center gap-5">
+                <h4 className="text-xl font-bold leading-snug tracking-tight">{step.title}</h4>
+                <p className="mt-1 text-zinc-500">{step.place}</p>
+                {step.detail && <p className="mt-3 text-sm leading-relaxed text-zinc-500">{step.detail}</p>}
+                <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
                   {step.logos.map((logo) => (
                     <img
                       key={logo.src}
                       src={logo.src}
                       alt={logo.alt}
                       draggable={false}
-                      className={`w-auto max-w-[150px] object-contain object-left ${logo.zoom ? '-my-3 h-[88px]' : 'h-full'}`}
+                      className={`w-auto max-w-[120px] object-contain object-left sm:max-w-[150px] ${logo.zoom ? '-my-3 h-[88px]' : 'h-14'}`}
                     />
                   ))}
                 </div>
-                <h4 className="text-xl font-bold leading-snug tracking-tight">{step.title}</h4>
-                <p className="mt-1 text-zinc-500">{step.place}</p>
-                {step.detail && <p className="mt-3 text-sm leading-relaxed text-zinc-500">{step.detail}</p>}
               </motion.div>
             ))}
           </div>

@@ -27,7 +27,7 @@ export default function Footer() {
           >
             <h3 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">Contact</h3>
             <p className="mb-10 max-w-md text-lg font-light leading-relaxed text-zinc-400">
-              Pour un stage, une mission ou une collaboration, vous pouvez m’écrire ou m’appeler directement.
+              Pour une mission ou une collaboration, vous pouvez m’écrire ou m’appeler directement.
             </p>
 
             <div className="space-y-4">

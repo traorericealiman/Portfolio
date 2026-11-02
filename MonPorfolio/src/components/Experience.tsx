@@ -230,7 +230,8 @@ function FanCard({
 }
 
 export default function Experience() {
-  const [active, setActive] = useState(0);
+  // On commence au milieu du paquet : les cartes s'étalent des deux côtés.
+  const [active, setActive] = useState(Math.floor(N / 2));
   const { spread, visible } = useSpread();
   const lastWheel = useRef(0);
 
@@ -245,7 +246,7 @@ export default function Experience() {
   };
 
   return (
-    <section id="experience" className="relative scroll-mt-12 overflow-hidden border-t border-zinc-200 bg-zinc-100 py-20 sm:py-28">
+    <section id="experience" className="relative isolate scroll-mt-12 overflow-hidden border-t border-zinc-200 bg-zinc-100 py-20 sm:py-28">
       <div className="mx-auto mb-6 flex max-w-6xl flex-col items-start justify-between gap-6 px-6 sm:mb-10 md:flex-row md:items-end lg:px-10">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}

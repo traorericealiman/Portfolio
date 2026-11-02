@@ -103,7 +103,7 @@ export default function Technologies() {
           <div
             role="tablist"
             aria-label="Catégories de technologies"
-            className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1 lg:col-span-4 lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0"
+            className="flex flex-wrap gap-2 lg:col-span-4 lg:flex-col lg:flex-nowrap lg:gap-0"
           >
             {STACK.map((s, i) => {
               const on = i === active;

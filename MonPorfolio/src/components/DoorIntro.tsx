@@ -9,20 +9,19 @@ import {
   useTransform,
 } from 'framer-motion';
 import Hero from './Hero';
+import { useFloatingWords } from '../lib/useFloatingWords';
 
 type Phase = 'idle' | 'opening';
 
 const NAME = 'Traoré Rice-Aliman';
 const PROMPT = 'Cliquez sur la porte pour entrer';
 const WORDS = [
-  { t: 'Innovation', x: 8, y: 18 },
-  { t: 'Design', x: 14, y: 52 },
-  { t: 'React', x: 80, y: 16 },
-  { t: 'Code', x: 86, y: 48 },
-  { t: 'Performance', x: 10, y: 82 },
-  { t: 'TypeScript', x: 84, y: 80 },
-  { t: 'UX/UI', x: 24, y: 30 },
-  { t: 'Vision', x: 70, y: 66 },
+  { t: 'Deep Learning', x: 12, y: 20 },
+  { t: 'Design', x: 86, y: 18 },
+  { t: 'Machine Learning', x: 14, y: 76 },
+  { t: 'Data', x: 86, y: 50 },
+  { t: 'UX/UI', x: 10, y: 48 },
+  { t: 'IA', x: 84, y: 78 },
 ];
 
 // Fibres lumineuses gravées sur le battant (repère 100 × 160, la poignée est vers x = 88, y = 80).
@@ -83,6 +82,14 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
   const ui = useAnimationControls();
   const glow = useAnimationControls();
   const sceneRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLDivElement>(null);
+  // Mots toujours entiers et visibles : ni coupés par les bords, ni cachés derrière la porte ou l'invitation.
+  const { wordRefs, positions } = useFloatingWords(rootRef, [frameRef, promptRef], WORDS, {
+    margin: 22,
+    gap: 14,
+  });
   const doorwayRef = useRef<HTMLDivElement>(null);
   const zoomAnim = useRef<Animation | null>(null);
   const [k0, setK0] = useState(0.15);
@@ -99,7 +106,9 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
 
   useEffect(() => {
     const prev = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     const move = (e: PointerEvent) => {
       mx.set((e.clientX / window.innerWidth - 0.5) * 2);
       my.set((e.clientY / window.innerHeight - 0.5) * 2);
@@ -107,6 +116,7 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
     window.addEventListener('pointermove', move);
     return () => {
       document.body.style.overflow = prev;
+      document.documentElement.style.overflow = prevHtml;
       window.removeEventListener('pointermove', move);
     };
   }, [mx, my]);
@@ -214,9 +224,10 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
   return (
     <motion.div
       animate={root}
+      ref={rootRef}
       initial={{ opacity: 1 }}
       onClick={phase === 'opening' ? () => zoomAnim.current?.finish() : undefined}
-      className="fixed inset-0 z-[100] overflow-hidden bg-zinc-950 select-none"
+      className="fixed inset-0 z-[100] touch-none overflow-hidden overscroll-none bg-zinc-950 select-none"
     >
       {/* Fond identique au Hero */}
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black" />
@@ -250,10 +261,15 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
         {WORDS.map((w, i) => (
           <motion.span
             key={w.t}
-            className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-black text-sm sm:text-xl lg:text-2xl text-blue-400/15"
-            style={{ left: `${w.x}%`, top: `${w.y}%` }}
+            ref={(el) => (wordRefs.current[i] = el)}
+            className="absolute whitespace-nowrap font-black text-sm sm:text-xl lg:text-2xl text-blue-400/15"
+            style={{
+              left: positions[i]?.left ?? 0,
+              top: positions[i]?.top ?? 0,
+              visibility: positions[i] ? 'visible' : 'hidden',
+            }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, -18, 0] }}
+            animate={{ opacity: 1, y: [0, -10, 0] }}
             transition={{
               opacity: { delay: 0.4 + i * 0.15, duration: 1.2 },
               y: { duration: 4 + (i % 3), repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 },
@@ -312,9 +328,10 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
 
           {/* Encadrement */}
           <motion.div
+            ref={frameRef}
             initial={{ opacity: 0, y: 40, scale: 0.92 }}
             animate={frame}
-            className="relative aspect-[5/8] h-[62vh] max-h-[700px] min-h-[340px] rounded-t-[999px] p-[10px]"
+            className="relative aspect-[5/8] h-[62vh] max-h-[700px] min-h-[340px] rounded-t-[999px] p-[10px] supports-[height:1svh]:h-[62svh]"
             style={{
               background: 'linear-gradient(160deg,#27272a,#09090b 60%,#18181b)',
               boxShadow:
@@ -496,6 +513,7 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
 
       {/* Invitation */}
       <motion.div
+        ref={promptRef}
         animate={ui}
         className="absolute bottom-[3vh] left-0 right-0 z-20 flex flex-col items-center gap-2 px-6 text-center"
       >
