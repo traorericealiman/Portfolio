@@ -15,7 +15,6 @@ const db = createClient(
   { auth: { persistSession: false } },
 );
 
-const TOKEN_SECRET = Deno.env.get("ADMIN_TOKEN_SECRET") ?? "";
 const TOKEN_MAX_AGE_S = 60 * 60 * 24 * 7; // 7 jours
 const MAX_HISTORY_DAYS = 400;
 const MAX_BODY_BYTES = 8 * 1024 * 1024; // images en base64 comprises
@@ -223,8 +222,10 @@ const b64url = (b: Uint8Array) => toB64(b).replaceAll("+", "-").replaceAll("/", 
 const fromB64url = (s: string) => fromB64(s.replaceAll("-", "+").replaceAll("_", "/").padEnd(Math.ceil(s.length / 4) * 4, "="));
 
 async function hmacKey() {
-  if (TOKEN_SECRET.length < 32) throw new HttpError(500, "ADMIN_TOKEN_SECRET absent ou trop court (32 caractères minimum)");
-  return crypto.subtle.importKey("raw", enc.encode(TOKEN_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+  // Relu à chaque appel : un secret modifié est pris en compte sans attendre le redémarrage de la fonction.
+  const secret = Deno.env.get("ADMIN_TOKEN_SECRET") ?? "";
+  if (secret.length < 32) throw new HttpError(500, "ADMIN_TOKEN_SECRET absent ou trop court (32 caractères minimum)");
+  return crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
 }
 
 async function passwordFingerprint(passwordHash: string): Promise<string> {
