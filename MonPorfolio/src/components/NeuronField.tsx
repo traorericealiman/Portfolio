@@ -23,7 +23,7 @@ export type Blocked = (b: Box) => boolean;
 
 const SEED = 20260211;
 const GROW_DELAY = 300; // ms : laisse l'encadrement de la porte apparaître d'abord
-const MAX_PULSES = 16;
+const MAX_PULSES = 8;
 const CELL = 6; // taille d'une case de la carte d'occupation (px)
 
 function mulberry32(seed: number) {
@@ -71,10 +71,8 @@ function spotsFor(variant: NeuronVariant, small: boolean) {
           { x: 0.88, y: 0.87, k: 1 },
         ]
       : [
-          { x: 0.12, y: 0.64, k: 1 },
-          { x: 0.87, y: 0.34, k: 1 },
-          { x: 0.25, y: 0.15, k: 0.7 },
-          { x: 0.78, y: 0.88, k: 0.7 },
+          { x: 0.13, y: 0.62, k: 1 },
+          { x: 0.87, y: 0.36, k: 1 },
         ];
   }
   // Accueil : les neurones encadrent le terminal, leurs axones y aboutissent.
@@ -84,10 +82,8 @@ function spotsFor(variant: NeuronVariant, small: boolean) {
         { x: 0.14, y: 0.86, k: 1 },
       ]
     : [
-        { x: 0.07, y: 0.42, k: 0.9 },
-        { x: 0.93, y: 0.6, k: 0.9 },
-        { x: 0.82, y: 0.14, k: 0.65 },
-        { x: 0.2, y: 0.9, k: 0.65 },
+        { x: 0.07, y: 0.45, k: 0.85 },
+        { x: 0.93, y: 0.58, k: 0.85 },
       ];
 }
 
@@ -137,7 +133,7 @@ function build(W: number, H: number, target: Box | null, variant: NeuronVariant)
         return;
       }
       // Petites épines, de temps en temps
-      if (rng() < 0.45) {
+      if (rng() < 0.22) {
         const t = 0.3 + rng() * 0.5;
         const base = quad(p, c, end, t);
         const sa = angle + (rng() < 0.5 ? 1 : -1) * (0.9 + rng() * 0.6);
@@ -145,18 +141,18 @@ function build(W: number, H: number, target: Box | null, variant: NeuronVariant)
         const tip = { x: base.x + Math.cos(sa) * sl, y: base.y + Math.sin(sa) * sl };
         segs.push({ a: base, c: lerp(base, tip, 0.5), b: tip, w: w * 0.45, alpha: 0.2, t0: start + seg.dur * t, dur: sl * 7 });
       }
-      const kids = rng() < 0.28 ? 3 : 2;
+      const kids = rng() < 0.12 ? 3 : 2;
       for (let k = 0; k < kids; k++) {
         const spread = (k / (kids - 1) - 0.5) * (0.75 + rng() * 0.45);
         grow(end, angle + spread, len * (0.6 + rng() * 0.2), w * 0.68, depth - 1, start + seg.dur, path);
       }
     };
 
-    const nDend = 5 + Math.floor(rng() * 2);
+    const nDend = 4 + Math.floor(rng() * 2);
     for (let i = 0; i < nDend; i++) {
       const a = out + (i / (nDend - 1) - 0.5) * Math.PI * 1.55 + (rng() - 0.5) * 0.35;
       const p = { x: soma.x + Math.cos(a) * r * 0.8, y: soma.y + Math.sin(a) * r * 0.8 };
-      grow(p, a, (52 + rng() * 34) * s, 2.3 * s, small ? 3 : 4, t0 + 220, [soma]);
+      grow(p, a, (52 + rng() * 34) * s, 2.3 * s, small ? 2 : 3, t0 + 220, [soma]);
     }
 
     // Axone : long fil ondulant du corps cellulaire jusqu'au bord de la cible.
@@ -400,7 +396,7 @@ export default function NeuronField({
           near = i;
         }
       });
-      const interval = near >= 0 ? 140 : 420;
+      const interval = near >= 0 ? 220 : 700;
       if (now - lastSpawn < interval) return;
       lastSpawn = now;
       const pool = near >= 0 ? scene.routes.filter((r) => r.neuron === near) : scene.routes;

@@ -14,12 +14,9 @@ export default function Hero({ preview = false }: { preview?: boolean }) {
   const floatingWords = [
     { text: 'Deep Learning', x: 14, y: 18, delay: 0 },
     { text: 'Design', x: 84, y: 20, delay: 0.5 },
-    { text: 'Machine Learning', x: 18, y: 84, delay: 1.5 },
-    { text: 'UX/UI', x: 10, y: 50, delay: 2 },
-    { text: 'Data', x: 88, y: 52, delay: 2.5 },
-    { text: 'Intelligence Artificielle', x: 50, y: 13, delay: 1 },
-    { text: 'Python', x: 82, y: 84, delay: 3 },
-    { text: 'Créativité', x: 50, y: 91, delay: 1.8 },
+    { text: 'Intelligence Artificielle', x: 50, y: 12, delay: 1 },
+    { text: 'Machine Learning', x: 18, y: 86, delay: 1.5 },
+    { text: 'Data', x: 82, y: 84, delay: 2.5 },
   ];
 
   // Les mots restent entiers et visibles : jamais coupés par les bords ni cachés

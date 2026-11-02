@@ -17,12 +17,10 @@ type Phase = 'idle' | 'opening';
 const NAME = 'Traoré Rice-Aliman';
 const PROMPT = 'Cliquez sur la porte pour entrer';
 const WORDS = [
-  { t: 'Deep Learning', x: 12, y: 20 },
-  { t: 'Design', x: 86, y: 18 },
-  { t: 'Machine Learning', x: 14, y: 76 },
-  { t: 'Data', x: 86, y: 50 },
-  { t: 'UX/UI', x: 10, y: 48 },
-  { t: 'IA', x: 84, y: 78 },
+  { t: 'Deep Learning', x: 14, y: 18 },
+  { t: 'Design', x: 86, y: 20 },
+  { t: 'Machine Learning', x: 16, y: 82 },
+  { t: 'Data', x: 84, y: 80 },
 ];
 
 // Fibres lumineuses gravées sur le battant (repère 100 × 160, la poignée est vers x = 88, y = 80).
@@ -169,7 +167,7 @@ export default function DoorIntro({ onReveal, onDone }: Props) {
 
   const dust = useMemo(
     () =>
-      Array.from({ length: 36 }, (_, i) => ({
+      Array.from({ length: 14 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         size: 1.5 + Math.random() * 3,
